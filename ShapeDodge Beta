@@ -503,8 +503,9 @@ function renderGame() {
         ctx.font = "50px Arial";
         ctx.textAlign = "center";
         ctx.fillText("PAUSED", gameArea.canvas.width / 2, gameArea.canvas.height / 2);
+        
         ctx.font = "18px Arial";
-        ctx.fillText("Press P or Esc to unpause");
+        ctx.fillText("Press P or Esc to unpause", gameArea.canvas.width / 2, gameArea.canvas.height / 2 + 40);
     }
 }
 
@@ -517,6 +518,7 @@ function engineLoop(currentTime) {
 
     frameAccumulator += deltaTime;
 
+    // We still want to run the loop so that the renderGame can catch the "unpause" state
     let running = true;
     while (frameAccumulator >= tickLength) {
         running = update(); 
