@@ -3,15 +3,15 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <style>
-html, body {
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-}
-canvas {
-    display: block;
-    background-color: #f1f1f1;
-}
+    html, body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+    canvas {
+        display: block;
+        background-color: #f1f1f1;
+    }
 </style>
 </head>
 <body onload="startGame()">
@@ -337,13 +337,14 @@ let enemiesObj = new Enemies();
 let bulletsObj = new Bullets();
 let waveManager = new WaveManager();
 let keys = { w:false, a:false, s:false, d:false, ArrowLeft:false, ArrowUp:false, ArrowRight:false, ArrowDown:false };
-let gameDuration = 0 // Store game duration in ticks
+let gameDuration = 0; // Store game duration in ticks
+let isPaused = false; // Game is paused/unpaused
 
 /* ============================
             START GAME
    ============================ */
 function startGame() {
-    alert("WASD to move, Arrow Keys to shoot");
+    alert("WASD to move, Arrow Keys to shoot, 'P' to Pause");
     playerObj = new Player(window.innerWidth / 2, window.innerHeight / 2);
     gameArea.start();
 }
@@ -446,6 +447,8 @@ function resetGame() {
               UPDATE
    ============================ */
 function update() {
+    if (isPaused) return true; // Don't process logic if paused
+
     movePlayer();
     
     playerObj.update();
@@ -491,6 +494,18 @@ function renderGame() {
     ctx.font = "20px Arial";
     ctx.textAlign = "left";
     ctx.fillText("Wave: " + waveManager.currentWave, 20, 40);
+
+    // ======== PAUSE OVERLAY ========
+    if (isPaused) {
+        ctx.fillStyle = "rgba(150,150,150,1)"; // Show gray screen so players don't cheat
+        ctx.fillRect(0, 0, gameArea.canvas.width, gameArea.canvas.height);
+        ctx.fillStyle = "white";
+        ctx.font = "50px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("PAUSED", gameArea.canvas.width / 2, gameArea.canvas.height / 2);
+        ctx.font = "18px Arial";
+        ctx.fillText("Press P or Esc to unpause");
+    }
 }
 
 /* ============================
@@ -518,7 +533,14 @@ function engineLoop(currentTime) {
 /* ============================
         KEYBOARD LISTENERS
    ============================ */
-document.addEventListener("keydown", e => { if (keys.hasOwnProperty(e.key)) keys[e.key] = true; });
+document.addEventListener("keydown", e => { 
+    if (keys.hasOwnProperty(e.key)) keys[e.key] = true; 
+    
+    // Toggle Pause with 'p' or 'Escape'
+    if (e.key.toLowerCase() === 'p' || e.key === 'Escape') {
+        isPaused = !isPaused;
+    }
+});
 document.addEventListener("keyup", e => { if (keys.hasOwnProperty(e.key)) keys[e.key] = false; });
 
 </script>
