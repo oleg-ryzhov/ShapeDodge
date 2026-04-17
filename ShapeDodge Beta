@@ -205,17 +205,17 @@ class Enemies {
             
             // ======== HEALTH BAR ========
             if (e.hp < e.maxHP) {
-              // ------ Outline ------
+              // ------- Outline -------
               let barWidth = Math.max(64, e.width);
               let barHeight = Math.max(8, e.height / 10);
 
               let barX = (e.x + e.width / 2) - (barWidth / 2); // Centered above enemy
-              let barY = e.y - 15; // 15px vertical offset
+              let barY = e.y - barHeight - 5; // 5px vertical offset
 
               ctx.fillStyle = "black";
               ctx.fillRect(barX, barY, barWidth, barHeight);
 
-              // ------ Filler ------
+              // ------- Filler --------
               const outlineWeight = 1; // Weight of the black outline
               let fillerWidth = (e.hp / e.maxHP) * (barWidth - outlineWeight * 2)
               let fillerHeight = barHeight - outlineWeight * 2;
@@ -575,3 +575,4 @@ document.addEventListener("keyup", e => { if (keys.hasOwnProperty(e.key)) keys[e
 </script>
 </body>
 </html>
+</html>`
