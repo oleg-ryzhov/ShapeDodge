@@ -7,14 +7,104 @@
         margin: 0;
         padding: 0;
         overflow: hidden;
+        background-color: #f1f1f1;
+        font-family: Arial, sans-serif;
     }
     canvas {
         display: block;
-        background-color: #f1f1f1;
     }
+
+    /* ======== UI MENU STYLES ======== */
+    #menu-overlay {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.4); 
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 100;
+    }
+
+    #menu-panel {
+        background: rgba(25, 25, 25, 0.95);
+        width: 33vw;
+        min-width: 300px;
+        height: 80vh;
+        border: 4px solid red;
+        border-radius: 20px;
+        color: white;
+        text-align: center;
+        padding: 30px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    #menu-title {
+        font-size: 2.5rem;
+        margin: 0;
+        color: red;
+    }
+
+    .button-group button {
+        width: 100%;
+        padding: 15px;
+        margin-bottom: 10px;
+        background: transparent;
+        border: 2px solid white;
+        color: white;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: 0.2s;
+        border-radius: 8px;
+        font-weight: bold;
+    }
+
+    .button-group button:hover {
+        background: red;
+        border-color: red;
+        transform: scale(1.05);
+    }
+
+    #tutorial-text {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 10px;
+        border-radius: 10px;
+        font-size: 0.9rem;
+    }
+
+    .hidden { display: none !important; }
 </style>
 </head>
-<body onload="startGame()">
+<body onload="init()">
+
+<div id="game-wrapper">
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="menu-overlay">
+        <div id="menu-panel">
+            <div>
+                <h1 id="menu-title">ShapeDodge</h1>
+                <p id="menu-subtitle">VERSION 1.7.5</p>
+            </div>
+            
+            <div class="button-group">
+                <button id="main-btn" onclick="handleMainButton()">START GAME</button>
+                <button onclick="toggleTutorial()">HOW TO PLAY</button>
+            </div>
+
+            <div id="tutorial-text" class="hidden">
+                <p><strong>WASD</strong> to Move</p>
+                <p><strong>ARROW KEYS</strong> to Shoot</p>
+                <p><strong>P</strong> or <strong>ESC</strong> to Pause</p>
+            </div>
+
+            <p style="font-size: 0.8rem; color: #555;">&copy; 2026 Oleg Ryzhov Industries</p>
+        </div>
+    </div>
+</div>
+
 <script>
 
 // ======== TICK ENGINE VARS ========
@@ -270,7 +360,7 @@ class WaveManager {
             }
         }
     }
-
+	// ======== SPAWN WAVES ========
     startNextWave() {
         this.currentWave++;
         let budget = this.baseBudget + (this.currentWave * 20);
@@ -291,7 +381,7 @@ class WaveManager {
         }
 
         this.spawnInterval = Math.max(10, 40 - (this.currentWave * 2));
-        playerObj.hp = Math.min(playerObj.maxHP, playerObj.hp + 50);
+        if(playerObj) playerObj.hp = Math.min(playerObj.maxHP, playerObj.hp + 50);
     }
 }
 
@@ -365,33 +455,96 @@ let bulletsObj = new Bullets();
 let waveManager = new WaveManager();
 let keys = { w:false, a:false, s:false, d:false, ArrowLeft:false, ArrowUp:false, ArrowRight:false, ArrowDown:false };
 let gameDuration = 0; // Store game duration in ticks
-let isPaused = false; // Game is paused/unpaused
+
+// ------- Game States -------
+let gameStarted = false; // Track if game is currently in session
+let isPaused = true;  // Game starts paused in the menu
+let gameOver = false; // Game over state
 
 /* ============================
-            START GAME
+          TRANSITIONS
    ============================ */
-function startGame() {
-    alert("WASD to move, Arrow Keys to shoot, 'P' to Pause");
-    playerObj = new Player(window.innerWidth / 2, window.innerHeight / 2);
-    gameArea.start();
+function init() {
+    gameArea.setup();
+}
+// ======== MAIN BUTTON ========
+// Main button = start/continue/retry
+function handleMainButton() { 
+    if (gameOver) {
+        resetGame(); // Soft reset to fix white screen
+        return;
+    }
+    if (!gameStarted) {
+        gameStarted = true;
+        playerObj = new Player(gameArea.canvas.width / 2, gameArea.canvas.height / 2);
+    }
+    togglePause();
+}
+
+// ======== COMPLETE GAME RESET ========
+function resetGame() {
+    gameOver = false;
+    gameStarted = true;
+    isPaused = false;
+    enemiesObj = new Enemies();
+    bulletsObj = new Bullets();
+    waveManager = new WaveManager();
+    playerObj = new Player(gameArea.canvas.width / 2, gameArea.canvas.height / 2);
+    
+    document.getElementById("menu-overlay").classList.add("hidden");
+}
+
+// ======== TOGGLE PAUSE ========
+function togglePause() {
+    if (gameOver) return;
+
+    isPaused = !isPaused; // toggle isPaused
+    const overlay = document.getElementById("menu-overlay");
+    const title = document.getElementById("menu-title");
+    const mainBtn = document.getElementById("main-btn");
+	// ------- Draw Menu -------=
+    if (isPaused) {
+        overlay.classList.remove("hidden");
+        title.innerText = gameStarted ? "PAUSED" : "ShapeDodge";
+        mainBtn.innerText = gameStarted ? "CONTINUE" : "START GAME";
+    } else {
+        overlay.classList.add("hidden");
+    }
+}
+// ======== HANDLE GAME OVER ========
+function handleGameOver() {
+    gameOver = true;
+    isPaused = true;
+    const overlay = document.getElementById("menu-overlay");
+    const title = document.getElementById("menu-title");
+    const mainBtn = document.getElementById("main-btn");
+
+    overlay.classList.remove("hidden");
+    title.innerText = "GAME OVER";
+    mainBtn.innerText = "RETRY";
+}
+
+function toggleTutorial() {
+    document.getElementById("tutorial-text").classList.toggle("hidden");
 }
 
 /* ============================
           GAME AREA ENGINE
    ============================ */
 const gameArea = {
-    canvas: document.createElement("canvas"),
-    start: function() {
+    canvas: document.getElementById("gameCanvas"),
+    setup: function() {
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
         this.context = this.canvas.getContext("2d");
-        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
         
         lastTimestamp = performance.now();
         requestAnimationFrame(engineLoop); 
     },
     clear: function() {
-        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        if (this.context) {
+            this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        }
     }
 };
 
@@ -407,6 +560,7 @@ function movePlayer() {
     if (keys.d && !keys.a) playerObj.speedX = playerObj.speed;
 }
 
+// ======== SHOOTING KEYBINDS ========
 function calculateShots() {
     if (keys.ArrowRight) playerObj.shootRight();
     if (keys.ArrowLeft) playerObj.shootLeft();
@@ -414,7 +568,9 @@ function calculateShots() {
     if (keys.ArrowDown) playerObj.shootDown();
 }
 
+// ======== COLLISION PROCESSING ENGINE ========
 function isColliding(a, b) {
+    if (!a || !b) return false;
     let aW = a.width || 0;
     let aH = a.height || 0;
     let bW = b.width || 0;
@@ -422,6 +578,9 @@ function isColliding(a, b) {
     return !(a.x + aW < b.x || a.x > b.x + bW || a.y + aH < b.y || a.y > b.y + bH);
 }
 
+/* ===============================
+        PROCESS ALL COLLISIONS
+   =============================== */
 function checkCollisions() {
     // Loop through enemies
     for (let i = enemiesObj.components.length - 1; i >= 0; i--) {
@@ -458,23 +617,11 @@ function checkCollisions() {
 }
 
 /* ============================
-            RESTART GAME
-   ============================ */
-function resetGame() {
-    playerObj = null;
-    enemiesObj = new Enemies();
-    bulletsObj = new Bullets();
-    waveManager = new WaveManager();
-    gameDuration = 0;
-    for (let k in keys) keys[k] = false;
-    startGame();
-}
-
-/* ============================
               UPDATE
    ============================ */
 function update() {
-    if (isPaused) return true; // Don't process logic if paused
+    // Don't process logic if paused or not started
+    if (!gameStarted || isPaused || gameOver) return true; 
 
     movePlayer();
     
@@ -488,17 +635,7 @@ function update() {
     checkCollisions();
 
     if (playerObj.hp <= 0) {
-        // Draw the final frame immediately before the alert pauses everything
-        renderGame(); 
-        
-        // Use a tiny timeout so the browser actually has a millisecond to 
-        // paint the canvas before the alert blocks the thread
-        const waveScore = waveManager.currentWave; 
-        setTimeout(() => {
-            alert("You Died!\nWaves Survived: " + (waveScore - 1));
-            resetGame();
-        }, 10);
-        
+        handleGameOver();
         return false; // Return false to tell the engine to stop updating
     }
     
@@ -512,27 +649,17 @@ function update() {
    ============================ */
 function renderGame() {
     gameArea.clear();
-    playerObj.draw();
-    enemiesObj.draw();
-    bulletsObj.draw();
+    
+    if (gameStarted && playerObj && gameArea.context) {
+        playerObj.draw();
+        enemiesObj.draw();
+        bulletsObj.draw();
 
-    const ctx = gameArea.context;
-    ctx.fillStyle = "black";
-    ctx.font = "20px Arial";
-    ctx.textAlign = "left";
-    ctx.fillText("Wave: " + waveManager.currentWave, 20, 40);
-
-    // ======== PAUSE OVERLAY ========
-    if (isPaused) {
-        ctx.fillStyle = "rgba(150,150,150,1)"; // Show gray screen so players don't cheat
-        ctx.fillRect(0, 0, gameArea.canvas.width, gameArea.canvas.height);
-        ctx.fillStyle = "white";
-        ctx.font = "50px Arial";
-        ctx.textAlign = "center";
-        ctx.fillText("PAUSED", gameArea.canvas.width / 2, gameArea.canvas.height / 2);
-        
-        ctx.font = "18px Arial";
-        ctx.fillText("Press P or Esc to unpause", gameArea.canvas.width / 2, gameArea.canvas.height / 2 + 40);
+        const ctx = gameArea.context;
+        ctx.fillStyle = "black";
+        ctx.font = "bold 24px Arial";
+        ctx.textAlign = "left";
+        ctx.fillText("Wave: " + waveManager.currentWave, 20, 45);
     }
 }
 
@@ -545,18 +672,14 @@ function engineLoop(currentTime) {
 
     frameAccumulator += deltaTime;
 
-    // We still want to run the loop so that the renderGame can catch the "unpause" state
     let running = true;
     while (frameAccumulator >= tickLength) {
         running = update(); 
         frameAccumulator -= tickLength;
-        if (!running) break; // Stop ticking if player died
     }
 
-    if (running) {
-        renderGame();
-        requestAnimationFrame(engineLoop);
-    }
+    renderGame();
+    requestAnimationFrame(engineLoop);
 }
 
 /* ============================
@@ -565,14 +688,19 @@ function engineLoop(currentTime) {
 document.addEventListener("keydown", e => { 
     if (keys.hasOwnProperty(e.key)) keys[e.key] = true; 
     
-    // Toggle Pause with 'p' or 'Escape'
+    // Toggle Pause with P or Esc
     if (e.key.toLowerCase() === 'p' || e.key === 'Escape') {
-        isPaused = !isPaused;
+        togglePause();
     }
 });
 document.addEventListener("keyup", e => { if (keys.hasOwnProperty(e.key)) keys[e.key] = false; });
 
+// Responsive resize
+window.addEventListener("resize", () => {
+    gameArea.canvas.width = window.innerWidth;
+    gameArea.canvas.height = window.innerHeight;
+});
+
 </script>
 </body>
 </html>
-</html>`
