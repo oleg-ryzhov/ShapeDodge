@@ -125,11 +125,11 @@ class Player {
 class Enemies {
     constructor() {
         this.types = {
-            gary: { width:80, height:80, speed:5, max_hp:25, hp:25, damage:35, color:"blue", cost:15, special:null, track_player:false },
-            fast:  { width:50, height:50, speed:8, max_hp:10, hp:10, damage:15, color:"yellow", cost:10, special:null, track_player:false },
-            tank:  { width:150, height: 150, speed:3, max_hp:100, hp:100, damage:60, color:"purple", cost:50, special:null, track_player: false },
-            tiny:  { width:25, height:25, speed:4, max_hp:5, hp:5, damage:10, color:"lime", cost:5, special:null, track_player: false },
-            snail: { width:15, height:15, speed:1.5, max_hp:1000, hp:1000, damage:1, color:"black", cost:500, special:'one_hp', track_player:true }
+            gary: { width:80, height:80, speed:5, maxHP:25, hp:25, damage:35, color:"blue", cost:15, special:null, track_player:false },
+            fast:  { width:50, height:50, speed:8, maxHP:10, hp:10, damage:15, color:"yellow", cost:10, special:null, track_player:false },
+            tank:  { width:150, height: 150, speed:3, maxHP:100, hp:100, damage:60, color:"purple", cost:50, special:null, track_player: false },
+            tiny:  { width:25, height:25, speed:4, maxHP:5, hp:5, damage:10, color:"lime", cost:5, special:null, track_player: false },
+            snail: { width:15, height:15, speed:1.5, maxHP:1000, hp:1000, damage:1, color:"black", cost:500, special:'one_hp', track_player:true }
         };
         this.components = [];
     }
@@ -153,8 +153,8 @@ class Enemies {
             speed: type.speed,
             speedX: dx * type.speed,
             speedY: dy * (type.speed * 0.2),
-            max_hp: type.max_hp,
-            hp: type.max_hp,
+            maxHP: type.maxHP,
+            hp: type.maxHP,
             damage: type.damage,
             color: type.color, cost: type.cost,
             special: type.special,
@@ -204,27 +204,28 @@ class Enemies {
             ctx.fillRect(e.x, e.y, e.width, e.height);
             
             // ======== HEALTH BAR ========
-            
-            // ------ Outline ------
-            let barWidth = Math.max(64, e.width);
-            let barHeight = Math.max(8, e.height / 10);
-            
-            let barX = (e.x + e.width / 2) - (barWidth / 2); // Centered above enemy
-            let barY = e.y - 15; // 15px vertical offset
-            
-            ctx.fillStyle = "black";
-            ctx.fillRect(barX, barY, barWidth, barHeight);
-            
-            // ------ Filler ------
-            const outlineWeight = 2; // Weight of the black outline
-            let fillerWidth = (e.hp / e.max_hp) * (barWidth - outlineWeight * 2)
-            let fillerHeight = barHeight - outlineWeight * 2;
-            
-            let fillerX = barX + outlineWeight;
-            let fillerY = barY + outlineWeight;
-            
-            ctx.fillStyle = "red";
-            ctx.fillRect(fillerX, fillerY, fillerWidth, fillerHeight);
+            if (e.hp < e.maxHP) {
+              // ------ Outline ------
+              let barWidth = Math.max(64, e.width);
+              let barHeight = Math.max(8, e.height / 10);
+
+              let barX = (e.x + e.width / 2) - (barWidth / 2); // Centered above enemy
+              let barY = e.y - 15; // 15px vertical offset
+
+              ctx.fillStyle = "black";
+              ctx.fillRect(barX, barY, barWidth, barHeight);
+
+              // ------ Filler ------
+              const outlineWeight = 1; // Weight of the black outline
+              let fillerWidth = (e.hp / e.maxHP) * (barWidth - outlineWeight * 2)
+              let fillerHeight = barHeight - outlineWeight * 2;
+
+              let fillerX = barX + outlineWeight;
+              let fillerY = barY + outlineWeight;
+
+              ctx.fillStyle = "red";
+              ctx.fillRect(fillerX, fillerY, fillerWidth, fillerHeight);
+            }
         });
     }
 }
