@@ -340,8 +340,8 @@ class WaveManager {
         this.duration++;
 	
         if (this.spawnQueue.length === 0) {
-            if (activeEnemies === 0 || this.duration >= this.maxDuration) {
-                // HAS to spawn if there are 0 enemies OR max wave duration was surpassed
+            if (activeEnemies === 0 || this.duration >= this.maxDuration || waveSnailDamage >= maxSnailDamage) {
+                // HAS to spawn if there are 0 enemies, max wave duration was surpassed, or the snail took enough damage
                 this.startNextWave();
             } else if (activeEnemies <= 2) {
                 // 1% chance to start new wave (runs every tick)
@@ -460,6 +460,9 @@ let gameDuration = 0; // Store game duration in ticks
 let gameStarted = false; // Track if game is currently in session
 let isPaused = true;  // Game starts paused in the menu
 let gameOver = false; // Game over state
+
+let waveSnailDamage = 0; // Track damage dealt to the snail every wave
+const maxSnailDamage = 75; // If more damage is dealt to the snail, a new wave will spawn
 
 /* ============================
           TRANSITIONS
@@ -606,6 +609,10 @@ function checkCollisions() {
                 enemy.hp -= bullet.damage; // Damage the enemy
                 bulletsObj.components.splice(j, 1); // Remove the bullet
                 
+                // Track damage dealt if snail was hit
+                if (enemy.special === "one_hp") {
+                	waveSnailDamage += bullet.damage;
+                }
                 // If enemy dies
                 if (enemy.hp <= 0) {
                     enemiesObj.components.splice(i, 1);
