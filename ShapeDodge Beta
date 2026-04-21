@@ -363,6 +363,7 @@ class WaveManager {
 	// ======== SPAWN WAVES ========
     startNextWave() {
         this.currentWave++;
+        waveSnailDamage = 0; // reset snail damage
         let budget = this.baseBudget + (this.currentWave * 20);
         this.duration = 0;
 
