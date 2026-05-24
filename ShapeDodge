@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- ======== GAME STYLES ======== -->
+    <link rel="stylesheet" href="ShapeDodge-styles.css">
+
+    <title>ShapeDodge</title>
+</head>
+
+<body onload="init()">
+
+    <!-- ======== GAME WRAPPER ======== -->
+    <div id="game-wrapper">
+
+        <!-- ======== Game Canvas ======== -->
+        <canvas id="gameCanvas"></canvas>
+		
+        <div id="menu-overlay">
+            <div id="menu-left">
+
+                <!-- ======== TITLE & SUBTITLE ======== -->
+                <div id="title-wrapper">
+                    <h1 class="title">ShapeDodge</h1>
+                    <p class="subtitle">VERSION 2026.8.0</p>
+                </div>
+	</div>
+
+
+            <!-- =========================================
+                           RIGHT MENU PANEL
+            ========================================== -->
+            <div id="main-menu">
+
+                <!-- ======== MAIN MENU ======== -->
+                <div id="main-menu-content">
+                    <div class="button-group">
+                        <button id="start-btn" onclick="startGame()"> START GAME </button>
+                        <button id="scores-btn" onclick="openScores()"> LEADERBOARD & SCORES </button>
+                        <button id="tutorial-btn" onclick="openTutorial()"> HOW TO PLAY </button>
+                        <button id="options-btn" onclick="openOptions()"> OPTIONS </button>
+                        <button id="shop-btn" onclick="openShop()"> SHOP & ACCESSORIES </button>
+                        <button id="coffee-btn" onclick="coffeeBreak()"> COFFEE BREAK </button>
+                        <button id="profile-btn" onclick="openProfile()"> EDIT PROFILE </button>
+                    </div>
+                </div>
+
+
+                <!-- ======== PAUSE MENU ======== -->
+                <div id="pause-menu" class="hidden">
+                    <div class="pause-header">
+                        <h1 class="title">PAUSED</h1>
+                        <p class="subtitle">ShapeDodge 2026.8.0</p>
+                    </div>
+
+                    <div class="button-group">
+                        <button id="resume-btn" onclick="resumeGame()"> CONTINUE </button>
+                        <button id="restart-btn" onclick="startGame()"> RESTART </button>
+						<button id="pause-main-menu-btn" onclick="quitToMenu()"> MAIN MENU </button>
+                    </div>
+                </div>
+
+
+                <!-- ======== GAME OVER MENU ======== -->
+                <div id="game-over-menu" class="hidden">
+                    <div class="stats-side">
+                        <h1 class="title"> GAME OVER! </h1>
+
+                        <p class="subtitle">Score: <span id="total-score">0</span>
+                        </p>
+
+                        <p class="subtitle">Waves survived: <span id="waves-survived">0</span> </p>
+                    </div>
+
+                    <div class="button-group">
+
+                        <button id="retry-btn" onclick="startGame()"> RETRY </button>
+                        <button id="gameover-main-menu-btn" onclick="quitToMenu()"> MAIN MENU </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script defer src="ShapeDodge-script.js"></script>
+
+</body>
+</html>
