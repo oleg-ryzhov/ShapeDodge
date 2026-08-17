@@ -1,4 +1,3 @@
-
 // ======== TICK ENGINE VARS ========
 const tickLength = 20;        // 50 ticks per second
 let frameAccumulator = 0;     // Store leftover time after every tick
@@ -177,9 +176,9 @@ class Enemies {
             }
         });
     }
-	// ======== RENDER VISUALS ========
+
+    // ======== RENDER VISUALS ========
     draw() {
-    	// Draw Enemy
         const ctx = gameArea.context;
         this.components.forEach(e => {
             ctx.fillStyle = e.color;
@@ -242,7 +241,7 @@ class WaveManager {
                 }
             }
         }
-		// Spawn enemies from the queue
+        // Spawn enemies from the queue
         if (this.spawnQueue.length > 0) {
             this.spawnTimer++;
             if (this.spawnTimer >= this.spawnInterval) {
@@ -252,7 +251,8 @@ class WaveManager {
             }
         }
     }
-	// ======== SPAWN WAVES ========
+
+    // ======== SPAWN WAVES ========
     startNextWave() {
         this.currentWave++;
         waveSnailDamage = 0; // reset snail damage
@@ -289,7 +289,8 @@ class Bullets {
         };
         this.components = [];
     }
-	// Spawn bullet with given parameters
+
+    // Spawn bullet with given parameters
     spawnBullet(posX, posY, vectorX, vectorY) {
         const type = this.types.default;
         const bullet = {
@@ -299,14 +300,15 @@ class Bullets {
             height: type.height,
             speedX: type.speed * vectorX,
             speedY: type.speed * vectorY,
-			// calculate direction of the bullet
+            // calculate direction of the bullet
             angle: Math.atan2(vectorY, vectorX),
             damage: type.damage,
             color: type.color
         };
         this.components.push(bullet);
     }
-	// ======== MATH ========
+
+    // ======== MATH ========
     update() {
         for (let i = this.components.length - 1; i >= 0; i--) {
             let b = this.components[i];
@@ -321,9 +323,9 @@ class Bullets {
             }
         }
     }
-	// ======== VISUALS ========
+
+    // ======== VISUALS ========
     draw() {
-    	// Draw bullet in the correct direction
         const ctx = gameArea.context;
         this.components.forEach(b => {
             ctx.save(); // Save the canvas state
@@ -374,6 +376,8 @@ function startGame() {
         enemiesObj = new Enemies();
         bulletsObj = new Bullets();
         waveManager = new WaveManager();
+        waveSnailDamage = 0;
+        gameDuration = 0;
 
         playerObj = new Player(
             gameArea.canvas.width / 2,
@@ -384,7 +388,6 @@ function startGame() {
     }
 
     document.getElementById("menu-overlay").classList.add("hidden");
-    document.getElementById("main-menu-content").classList.remove("hidden");
     document.getElementById("pause-menu").classList.add("hidden");
     document.getElementById("game-over-menu").classList.add("hidden");
 }
@@ -392,15 +395,12 @@ function startGame() {
 // ======== RESUME GAME ========
 function resumeGame() {
     isPaused = false;
-
-    document.getElementById("menu-overlay").classList.add("hidden");
     document.getElementById("pause-menu").classList.add("hidden");
 }
 
 // ======== QUIT TO MENU ========
 function quitToMenu() {
     isPaused = true;
-
     document.getElementById("menu-overlay").classList.remove("hidden");
     document.getElementById("main-menu-content").classList.remove("hidden");
     document.getElementById("pause-menu").classList.add("hidden");
@@ -410,16 +410,12 @@ function quitToMenu() {
 // ======== TOGGLE PAUSE ========
 function togglePause() {
     if (!gameStarted || gameOver) return;
-	
+
     isPaused = !isPaused;
 
     if (isPaused) {
-        document.getElementById("menu-overlay").classList.remove("hidden");
-        document.getElementById("main-menu-content").classList.add("hidden");
         document.getElementById("pause-menu").classList.remove("hidden");
-        document.getElementById("game-over-menu").classList.add("hidden");
     } else {
-        document.getElementById("menu-overlay").classList.add("hidden");
         document.getElementById("pause-menu").classList.add("hidden");
     }
 }
@@ -429,18 +425,9 @@ function handleGameOver() {
     gameOver = true;
     isPaused = true;
 
-    document.getElementById("menu-overlay").classList.remove("hidden");
-
-    document.getElementById("main-menu-content").classList.add("hidden");
-
-    document.getElementById("pause-menu").classList.add("hidden");
-
     document.getElementById("game-over-menu").classList.remove("hidden");
-
     document.getElementById("total-score").innerText = gameDuration;
-
-    document.getElementById("waves-survived").innerText =
-        waveManager.currentWave;
+    document.getElementById("waves-survived").innerText = waveManager.currentWave;
 }
 
 // ======== TUTORIAL TOGGLE ========
@@ -531,7 +518,7 @@ function checkCollisions() {
                 
                 // Track damage dealt if snail was hit
                 if (enemy.special === "one_hp") {
-                	waveSnailDamage += bullet.damage;
+                    waveSnailDamage += bullet.damage;
                 }
                 // If enemy dies
                 if (enemy.hp <= 0) {
