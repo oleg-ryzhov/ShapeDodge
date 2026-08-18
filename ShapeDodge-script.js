@@ -403,7 +403,7 @@ function quitToMenu() {
     isPaused = true;
     document.getElementById("main-menu-overlay").classList.remove("hidden");
     document.getElementById("main-menu-content").classList.remove("hidden");
-    document.getElementById("pause-menu").classList.add("hidden");
+    document.getElementById("pause-menu-overlay").classList.add("hidden");
     document.getElementById("game-over-menu-overlay").classList.add("hidden");
 }
 
