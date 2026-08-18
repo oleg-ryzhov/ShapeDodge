@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="ShapeDodge-styles.css">
+    <title>ShapeDodge</title>
+</head>
+<body onload="init()">
+    <div id="game-wrapper">
+        <!-- ======== Game Canvas ======== -->
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- ======== MAIN MENU OVERLAY (split panel layout) ======== -->
+        <div id="menu-overlay">
+            <div id="menu-left">
+                <div id="title-wrapper">
+                    <h1 class="title">ShapeDodge</h1>
+                    <p class="subtitle">VERSION 2026.8.0</p>
+                </div>
+            </div>
+            <div id="main-menu">
+                <div id="main-menu-content">
+                    <div class="button-group">
+                        <button id="start-btn" onclick="startGame()">START GAME</button>
+                        <button id="scores-btn" onclick="openScores()">LEADERBOARD & SCORES</button>
+                        <button id="tutorial-btn" onclick="openTutorial()">HOW TO PLAY</button>
+                        <button id="options-btn" onclick="openOptions()">OPTIONS</button>
+                        <button id="shop-btn" onclick="openShop()">SHOP & ACCESSORIES</button>
+                        <button id="coffee-btn" onclick="coffeeBreak()">COFFEE BREAK</button>
+                        <button id="profile-btn" onclick="openProfile()">EDIT PROFILE</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======== PAUSE MENU (fullscreen over canvas) ======== -->
+        <div id="pause-menu" class="fullscreen-menu hidden">
+            <div class="floating-panel">
+                <h1 class="title">PAUSED</h1>
+                <div class="button-group">
+                    <button onclick="resumeGame()">CONTINUE</button>
+                    <button onclick="startGame()">RESTART</button>
+                    <button onclick="toggleTutorial()">HOW TO PLAY</button>
+                    <button onclick="openAchievements()">ACHIEVEMENTS</button>
+                    <button onclick="openLeaderboard()">LEADERBOARD</button>
+                    <button onclick="openOptions()">OPTIONS</button>
+                    <button onclick="quitToMenu()">MAIN MENU</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======== GAME OVER MENU (fullscreen over canvas) ======== -->
+        <div id="game-over-menu" class="fullscreen-menu hidden">
+            <div class="floating-panel">
+                <h1 class="title">GAME OVER</h1>
+                <p class="stat-line">Score: <span id="total-score">0</span></p>
+                <p class="stat-line">Waves survived: <span id="waves-survived">0</span></p>
+                <div class="button-group">
+                    <button onclick="startGame()">RETRY</button>
+                    <button onclick="quitToMenu()">MAIN MENU</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script defer src="ShapeDodge-script.js"></script>
+</body>
+</html>

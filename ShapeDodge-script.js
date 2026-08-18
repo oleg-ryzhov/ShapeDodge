@@ -1,112 +1,3 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<style>
-    html, body {
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-        background-color: #f1f1f1;
-        font-family: Arial, sans-serif;
-    }
-    canvas {
-        display: block;
-    }
-
-    /* ======== UI MENU STYLES ======== */
-    #menu-overlay {
-        position: absolute;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background: rgba(0, 0, 0, 0.4); 
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 100;
-    }
-
-    #menu-panel {
-        background: rgba(25, 25, 25, 0.95);
-        width: 33vw;
-        min-width: 300px;
-        height: 80vh;
-        border: 4px solid red;
-        border-radius: 20px;
-        color: white;
-        text-align: center;
-        padding: 30px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-    }
-
-    #menu-title {
-        font-size: 2.5rem;
-        margin: 0;
-        color: red;
-    }
-
-    .button-group button {
-        width: 100%;
-        padding: 15px;
-        margin-bottom: 10px;
-        background: transparent;
-        border: 2px solid white;
-        color: white;
-        font-size: 1.1rem;
-        cursor: pointer;
-        transition: 0.2s;
-        border-radius: 8px;
-        font-weight: bold;
-    }
-
-    .button-group button:hover {
-        background: red;
-        border-color: red;
-        transform: scale(1.05);
-    }
-
-    #tutorial-text {
-        background: rgba(255, 255, 255, 0.1);
-        padding: 10px;
-        border-radius: 10px;
-        font-size: 0.9rem;
-    }
-
-    .hidden { display: none !important; }
-</style>
-</head>
-<body onload="init()">
-
-<div id="game-wrapper">
-    <canvas id="gameCanvas"></canvas>
-
-    <div id="menu-overlay">
-        <div id="menu-panel">
-            <div>
-                <h1 id="menu-title">ShapeDodge</h1>
-                <p id="menu-subtitle">VERSION 1.7.5</p>
-            </div>
-            
-            <div class="button-group">
-                <button id="main-btn" onclick="handleMainButton()">START GAME</button>
-                <button onclick="toggleTutorial()">HOW TO PLAY</button>
-            </div>
-
-            <div id="tutorial-text" class="hidden">
-                <p><strong>WASD</strong> to Move</p>
-                <p><strong>ARROW KEYS</strong> to Shoot</p>
-                <p><strong>P</strong> or <strong>ESC</strong> to Pause</p>
-            </div>
-
-            <p style="font-size: 0.8rem; color: #555;">&copy; 2026 Oleg Ryzhov Industries</p>
-        </div>
-    </div>
-</div>
-
-<script>
-
 // ======== TICK ENGINE VARS ========
 const tickLength = 20;        // 50 ticks per second
 let frameAccumulator = 0;     // Store leftover time after every tick
@@ -285,9 +176,9 @@ class Enemies {
             }
         });
     }
-	// ======== RENDER VISUALS ========
+
+    // ======== RENDER VISUALS ========
     draw() {
-    	// Draw Enemy
         const ctx = gameArea.context;
         this.components.forEach(e => {
             ctx.fillStyle = e.color;
@@ -350,7 +241,7 @@ class WaveManager {
                 }
             }
         }
-		// Spawn enemies from the queue
+        // Spawn enemies from the queue
         if (this.spawnQueue.length > 0) {
             this.spawnTimer++;
             if (this.spawnTimer >= this.spawnInterval) {
@@ -360,7 +251,8 @@ class WaveManager {
             }
         }
     }
-	// ======== SPAWN WAVES ========
+
+    // ======== SPAWN WAVES ========
     startNextWave() {
         this.currentWave++;
         waveSnailDamage = 0; // reset snail damage
@@ -397,7 +289,8 @@ class Bullets {
         };
         this.components = [];
     }
-	// Spawn bullet with given parameters
+
+    // Spawn bullet with given parameters
     spawnBullet(posX, posY, vectorX, vectorY) {
         const type = this.types.default;
         const bullet = {
@@ -407,14 +300,15 @@ class Bullets {
             height: type.height,
             speedX: type.speed * vectorX,
             speedY: type.speed * vectorY,
-			// calculate direction of the bullet
+            // calculate direction of the bullet
             angle: Math.atan2(vectorY, vectorX),
             damage: type.damage,
             color: type.color
         };
         this.components.push(bullet);
     }
-	// ======== MATH ========
+
+    // ======== MATH ========
     update() {
         for (let i = this.components.length - 1; i >= 0; i--) {
             let b = this.components[i];
@@ -429,9 +323,9 @@ class Bullets {
             }
         }
     }
-	// ======== VISUALS ========
+
+    // ======== VISUALS ========
     draw() {
-    	// Draw bullet in the correct direction
         const ctx = gameArea.context;
         this.components.forEach(b => {
             ctx.save(); // Save the canvas state
@@ -471,65 +365,77 @@ const maxSnailDamage = 75; // If more damage is dealt to the snail, a new wave w
 function init() {
     gameArea.setup();
 }
-// ======== MAIN BUTTON ========
-// Main button = start/continue/retry
-function handleMainButton() { 
-    if (gameOver) {
-        resetGame(); // Soft reset to fix white screen
-        return;
-    }
-    if (!gameStarted) {
+
+// ======== START GAME ========
+function startGame() {
+    if (!gameStarted || gameOver) {
+        gameOver = false;
         gameStarted = true;
-        playerObj = new Player(gameArea.canvas.width / 2, gameArea.canvas.height / 2);
+        isPaused = false;
+
+        enemiesObj = new Enemies();
+        bulletsObj = new Bullets();
+        waveManager = new WaveManager();
+        waveSnailDamage = 0;
+        gameDuration = 0;
+
+        playerObj = new Player(
+            gameArea.canvas.width / 2,
+            gameArea.canvas.height / 2
+        );
+    } else {
+        isPaused = false;
     }
-    togglePause();
+
+    document.getElementById("menu-overlay").classList.add("hidden");
+    document.getElementById("pause-menu").classList.add("hidden");
+    document.getElementById("game-over-menu").classList.add("hidden");
 }
 
-// ======== COMPLETE GAME RESET ========
-function resetGame() {
-    gameOver = false;
-    gameStarted = true;
+// ======== RESUME GAME ========
+function resumeGame() {
     isPaused = false;
-    enemiesObj = new Enemies();
-    bulletsObj = new Bullets();
-    waveManager = new WaveManager();
-    playerObj = new Player(gameArea.canvas.width / 2, gameArea.canvas.height / 2);
-    
-    document.getElementById("menu-overlay").classList.add("hidden");
+    document.getElementById("pause-menu").classList.add("hidden");
+}
+
+// ======== QUIT TO MENU ========
+function quitToMenu() {
+    isPaused = true;
+    document.getElementById("menu-overlay").classList.remove("hidden");
+    document.getElementById("main-menu-content").classList.remove("hidden");
+    document.getElementById("pause-menu").classList.add("hidden");
+    document.getElementById("game-over-menu").classList.add("hidden");
 }
 
 // ======== TOGGLE PAUSE ========
 function togglePause() {
-    if (gameOver) return;
+    if (!gameStarted || gameOver) return;
 
-    isPaused = !isPaused; // toggle isPaused
-    const overlay = document.getElementById("menu-overlay");
-    const title = document.getElementById("menu-title");
-    const mainBtn = document.getElementById("main-btn");
-	// ------- Draw Menu -------=
+    isPaused = !isPaused;
+
     if (isPaused) {
-        overlay.classList.remove("hidden");
-        title.innerText = gameStarted ? "PAUSED" : "ShapeDodge";
-        mainBtn.innerText = gameStarted ? "CONTINUE" : "START GAME";
+        document.getElementById("pause-menu").classList.remove("hidden");
     } else {
-        overlay.classList.add("hidden");
+        document.getElementById("pause-menu").classList.add("hidden");
     }
 }
+
 // ======== HANDLE GAME OVER ========
 function handleGameOver() {
     gameOver = true;
     isPaused = true;
-    const overlay = document.getElementById("menu-overlay");
-    const title = document.getElementById("menu-title");
-    const mainBtn = document.getElementById("main-btn");
 
-    overlay.classList.remove("hidden");
-    title.innerText = "GAME OVER";
-    mainBtn.innerText = "RETRY";
+    document.getElementById("game-over-menu").classList.remove("hidden");
+    document.getElementById("total-score").innerText = gameDuration;
+    document.getElementById("waves-survived").innerText = waveManager.currentWave;
 }
 
+// ======== TUTORIAL TOGGLE ========
 function toggleTutorial() {
-    document.getElementById("tutorial-text").classList.toggle("hidden");
+    document
+        .getElementById("tutorial-text")
+        .classList
+        .toggle("hidden");
 }
 
 /* ============================
@@ -612,7 +518,7 @@ function checkCollisions() {
                 
                 // Track damage dealt if snail was hit
                 if (enemy.special === "one_hp") {
-                	waveSnailDamage += bullet.damage;
+                    waveSnailDamage += bullet.damage;
                 }
                 // If enemy dies
                 if (enemy.hp <= 0) {
@@ -708,7 +614,3 @@ window.addEventListener("resize", () => {
     gameArea.canvas.width = window.innerWidth;
     gameArea.canvas.height = window.innerHeight;
 });
-
-</script>
-</body>
-</html>
