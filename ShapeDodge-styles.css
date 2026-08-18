@@ -27,7 +27,7 @@ canvas {
 }
 
 /* ======== MAIN MENU OVERLAY (split layout) ======== */
-#menu-overlay {
+#main-menu-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -35,19 +35,6 @@ canvas {
     height: 100%;
     display: flex;
     z-index: 100;
-}
-
-/* ======== LEFT MENU PANEL ======== */
-#menu-left {
-    position: relative;
-    flex: 0 0 38%;
-    height: 100vh;
-    background-image: url("shape-dodge-images/main-menu-bg.png");
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    overflow: hidden;
 }
 
 /* ======== TITLE WRAPPER ======== */
@@ -60,8 +47,21 @@ canvas {
     align-items: center;
 }
 
+/* ======== LEFT MENU PANEL ======== */
+#main-menu-left {
+    position: relative;
+    flex: 0 0 38%;
+    height: 100vh;
+    background-image: url("shape-dodge-images/main-menu-bg.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    overflow: hidden;
+}
+
 /* ======== RIGHT MENU PANEL ======== */
-#main-menu {
+#main-menu-right {
     flex: 1;
     height: 100vh;
     background: #919191;
@@ -156,12 +156,12 @@ canvas {
 
     backdrop-filter: blur(7px);
     -webkit-backdrop-filter: blur(7px);
-    background: rgba(20, 22, 26, 0.10); /* slight dim so the panel pops */
+    background: rgba(20, 22, 26, 0.10);
 }
 
-/* ======== FLOATING PANEL (the rounded card) ======== */
-.floating-panel {
-    background: rgba(100, 110, 120, 0.75); /* ~75% opacity grey */
+/* ======== FLOATING MENU PANEL ======== */
+.floating-menu {
+    background: rgba(100, 110, 120, 0.75);
     border-radius: 32px;
     padding: 36px 48px;
     display: flex;
@@ -172,39 +172,39 @@ canvas {
     width: 35%;
     max-height: 90%;
     box-sizing: border-box;
-    overflow-y: auto; /* falls back to scrolling only if content truly exceeds 90% height */
+    overflow-y: auto;
 
     border: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
 }
 
-.floating-panel .title {
+.floating-menu .title {
     color: #2c3e50;
     margin: 0 0 20px 0;
 }
 
-.floating-panel .stat-line {
+.floating-menu .stat-line {
     margin: 4px 0 12px 0;
 }
 
 /* ======== OVERLAY BUTTONS (semi-transparent, fixed readable sizing) ======== */
-.floating-panel .button-group {
+.floating-menu .button-group {
     width: 100%;
     min-width: unset;
     max-width: unset;
 }
 
-.floating-panel .button-group button {
+.floating-menu .button-group button {
     background: rgba(80, 88, 96, 0.70); /* 70% opacity */
     margin-bottom: 14px;
     color: #e0e6ec;
     padding: 16px 20px;
     font-size: 1.05rem;
 }
-.floating-panel .button-group button:last-child {
+.floating-menu .button-group button:last-child {
     margin-bottom: 0;
 }
-.floating-panel .button-group button:hover {
+.floating-menu .button-group button:hover {
     background: rgba(110, 120, 130, 0.80);
     transform: scale(1.02);
 }

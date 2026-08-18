@@ -387,55 +387,47 @@ function startGame() {
         isPaused = false;
     }
 
-    document.getElementById("menu-overlay").classList.add("hidden");
-    document.getElementById("pause-menu").classList.add("hidden");
-    document.getElementById("game-over-menu").classList.add("hidden");
+    document.getElementById("main-menu-overlay").classList.add("hidden");
+    document.getElementById("pause-menu-overlay").classList.add("hidden");
+    document.getElementById("game-over-menu-overlay").classList.add("hidden");
 }
 
-// ======== RESUME GAME ========
+// ========= RESUME GAME =========
 function resumeGame() {
     isPaused = false;
     document.getElementById("pause-menu").classList.add("hidden");
 }
 
-// ======== QUIT TO MENU ========
+// ========= QUIT TO MENU =========
 function quitToMenu() {
     isPaused = true;
-    document.getElementById("menu-overlay").classList.remove("hidden");
+    document.getElementById("main-menu-overlay").classList.remove("hidden");
     document.getElementById("main-menu-content").classList.remove("hidden");
     document.getElementById("pause-menu").classList.add("hidden");
-    document.getElementById("game-over-menu").classList.add("hidden");
+    document.getElementById("game-over-menu-overlay").classList.add("hidden");
 }
 
-// ======== TOGGLE PAUSE ========
+// ========= TOGGLE PAUSE =========
 function togglePause() {
     if (!gameStarted || gameOver) return;
 
     isPaused = !isPaused;
 
     if (isPaused) {
-        document.getElementById("pause-menu").classList.remove("hidden");
+        document.getElementById("pause-menu-overlay").classList.remove("hidden");
     } else {
-        document.getElementById("pause-menu").classList.add("hidden");
+        document.getElementById("pause-menu-overlay").classList.add("hidden");
     }
 }
 
-// ======== HANDLE GAME OVER ========
+// ========= HANDLE GAME OVER =========
 function handleGameOver() {
     gameOver = true;
     isPaused = true;
 
-    document.getElementById("game-over-menu").classList.remove("hidden");
+    document.getElementById("game-over-menu-overlay").classList.remove("hidden");
     document.getElementById("total-score").innerText = gameDuration;
     document.getElementById("waves-survived").innerText = waveManager.currentWave;
-}
-
-// ======== TUTORIAL TOGGLE ========
-function toggleTutorial() {
-    document
-        .getElementById("tutorial-text")
-        .classList
-        .toggle("hidden");
 }
 
 /* ============================

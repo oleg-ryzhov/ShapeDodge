@@ -8,18 +8,20 @@
 </head>
 <body onload="init()">
     <div id="game-wrapper">
-        <!-- ======== Game Canvas ======== -->
+        <!-- ========= Game Canvas ========= -->
         <canvas id="gameCanvas"></canvas>
 
-        <!-- ======== MAIN MENU OVERLAY (split panel layout) ======== -->
-        <div id="menu-overlay">
-            <div id="menu-left">
+        <!-- ========= MAIN MENU  ========= -->
+        <div id="main-menu-overlay">
+			<!-- ========= LEFT PANEL (titles) ========= -->
+            <div id="main-menu-left">
                 <div id="title-wrapper">
                     <h1 class="title">ShapeDodge</h1>
-                    <p class="subtitle">VERSION 2026.8.0</p>
+                    <p class="subtitle">VERSION 2026.8.5</p>
                 </div>
             </div>
-            <div id="main-menu">
+			<!-- ========= RIGHT PANEL (buttons) ========= -->
+            <div id="main-menu-right">
                 <div id="main-menu-content">
                     <div class="button-group">
                         <button id="start-btn" onclick="startGame()">START GAME</button>
@@ -34,9 +36,9 @@
             </div>
         </div>
 
-        <!-- ======== PAUSE MENU (fullscreen over canvas) ======== -->
-        <div id="pause-menu" class="fullscreen-menu hidden">
-            <div class="floating-panel">
+        <!-- ======== PAUSE MENU ======== -->
+        <div id="pause-menu-overlay" class="fullscreen-menu hidden">
+            <div class="floating-menu">
                 <h1 class="title">PAUSED</h1>
                 <div class="button-group">
                     <button onclick="resumeGame()">CONTINUE</button>
@@ -50,9 +52,9 @@
             </div>
         </div>
 
-        <!-- ======== GAME OVER MENU (fullscreen over canvas) ======== -->
-        <div id="game-over-menu" class="fullscreen-menu hidden">
-            <div class="floating-panel">
+        <!-- ======== GAME OVER MENU ======== -->
+        <div id="game-over-menu-overlay" class="fullscreen-menu hidden">
+            <div class="floating-menu">
                 <h1 class="title">GAME OVER</h1>
                 <p class="stat-line">Score: <span id="total-score">0</span></p>
                 <p class="stat-line">Waves survived: <span id="waves-survived">0</span></p>
