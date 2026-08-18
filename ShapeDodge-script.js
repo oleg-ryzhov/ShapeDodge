@@ -395,7 +395,7 @@ function startGame() {
 // ========= RESUME GAME =========
 function resumeGame() {
     isPaused = false;
-    document.getElementById("pause-menu").classList.add("hidden");
+    document.getElementById("pause-menu-overlay").classList.add("hidden");
 }
 
 // ========= QUIT TO MENU =========
