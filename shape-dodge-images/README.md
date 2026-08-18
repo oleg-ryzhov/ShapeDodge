@@ -1,1 +1,1 @@
-This is a folder for in-game textures
+This is a folder for in-game textures, images, and sprites.
