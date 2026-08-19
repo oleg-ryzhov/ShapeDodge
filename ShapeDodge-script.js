@@ -598,15 +598,19 @@ function engineLoop(currentTime) {
 /* ============================
         KEYBOARD LISTENERS
    ============================ */
-document.addEventListener("keydown", e => { 
-    if (keys.hasOwnProperty(e.key)) keys[e.key] = true; 
-    
-    // Toggle Pause with P or Esc
-    if (e.key.toLowerCase() === 'p' || e.key === 'Escape') {
+document.addEventListener("keydown", e => {
+    const key = e.key.toLowerCase();
+    if (keys.hasOwnProperty(key)) keys[key] = true;
+	
+
+    if (key === 'p' || e.key === 'Escape') {
         togglePause();
     }
 });
-document.addEventListener("keyup", e => { if (keys.hasOwnProperty(e.key)) keys[e.key] = false; });
+document.addEventListener("keyup", e => {
+    const key = e.key.toLowerCase();
+    if (keys.hasOwnProperty(key)) keys[key] = false;
+});
 
 // Responsive resize
 window.addEventListener("resize", () => {
