@@ -599,19 +599,18 @@ function engineLoop(currentTime) {
         KEYBOARD LISTENERS
    ============================ */
 document.addEventListener("keydown", e => {
-    const key = e.key.toLowerCase();
+    const key = e.key.startsWith("Arrow")
+        ? e.key
+        : e.key.toLowerCase();
     if (keys.hasOwnProperty(key)) keys[key] = true;
-	
-
-    if (key === 'p' || e.key === 'Escape') {
-        togglePause();
-    }
+    if (e.key === "Escape" || key === "p") togglePause();
 });
 document.addEventListener("keyup", e => {
-    const key = e.key.toLowerCase();
+    const key = e.key.startsWith("Arrow")
+        ? e.key
+        : e.key.toLowerCase();
     if (keys.hasOwnProperty(key)) keys[key] = false;
 });
-
 // Responsive resize
 window.addEventListener("resize", () => {
     gameArea.canvas.width = window.innerWidth;
