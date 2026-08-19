@@ -1,3 +1,4 @@
+
 // ======== TICK ENGINE VARS ========
 const tickLength = 20;        // 50 ticks per second
 let frameAccumulator = 0;     // Store leftover time after every tick
@@ -18,31 +19,32 @@ class Player {
         this.maxHP = 200;
         this.hp = this.maxHP;
 
-        this.lastDamageTime = 0; 
-        this.damageCooldown = 50; // 50 tps
+        this.lastDamageTime = 0; // timestamp of last damage event
+        this.damageCooldown = 50; // 1 second damage cooldown
 
-        this.lastShotTime = 0; 
-        this.shotCooldown = 20;   // 0.4 seconds
+        this.lastShotTime = 0; // timestamp of last shot
+        this.shotCooldown = 20; // 0.4 seconds
         
-        // Keep track of last time cooldown events occured
-        this.damageTickCounter = -150; // 3 seconds immortality at start 
-        this.shotTickCounter = 20;
+        this.damageTickCounter = -100; // 3 seconds immortality at start (needs to reach 50 to be able to take damage)
+        this.shotTickCounter = 20; // Bypasses shotCooldown so the player can shoot right after the game starts
     }
 	
-    // ======== CALCULATIONS ========
+    // ========= UPDATE PLAYER =========
     update() {
+		// Move player icon
         this.x += this.speedX;
         this.y += this.speedY;
 
         // Keep player inside canvas
         this.x = Math.max(0, Math.min(this.x, gameArea.canvas.width - this.width));
         this.y = Math.max(0, Math.min(this.y, gameArea.canvas.height - this.height));
-
+		
+		// Increment cooldown timers by 1
         this.damageTickCounter++;
         this.shotTickCounter++;
     }
 
-    // ======== VISUALS ========
+    // ========= RENDER VISUALS =========
     draw() {
         const ctx = gameArea.context;
 
@@ -50,33 +52,35 @@ class Player {
         ctx.fillStyle = "red";
         ctx.fillRect(this.x, this.y, this.width, this.height);
 
-        // Draw Health Bar UI
+        // ========= DRAW PLAYER HEALTH BAR =========
         const barWidth = 600;
         const barHeight = 30;
         const barX = (gameArea.canvas.width - barWidth) / 2;
         const barY = gameArea.canvas.height - barHeight - 10;
-
+		
+		// Draw black background + outline
         ctx.fillStyle = "black";
         ctx.fillRect(barX, barY, barWidth, barHeight);
-
+		
+		// Draw red filler
         ctx.fillStyle = "red";
-        ctx.fillRect(barX, barY, barWidth * (this.hp / this.maxHP), barHeight);
-
+        ctx.fillRect(barX, barY, barWidth * (this.hp / this.maxHP), barHeight); // adjust to health value
+		
         ctx.fillStyle = "white";
         ctx.font = "16px Arial";
         ctx.textAlign = "center";
         ctx.fillText(Math.ceil(this.hp) + " / " + this.maxHP, barX + barWidth / 2, barY + barHeight - 5);
     }
 	
-    // ======== DAMAGE LOGIC ========
+    // ========= DAMAGE LOGIC =========
     takeDamage(amount) {
         if (this.damageTickCounter >= this.damageCooldown) {
-            this.hp = Math.max(0, this.hp - amount);
-            this.damageTickCounter = 0;
+            this.hp = Math.max(0, this.hp - amount); // Health cannot go below 0
+            this.damageTickCounter = 0; // Reset the cooldown timer
         }
     }
     
-    // ======== SHOOTING LOGIC ========
+    // ========= SHOOTING LOGIC =========
     shootLeft() {
         if (this.shotTickCounter >= this.shotCooldown) {
             bulletsObj.spawnBullet(this.x, this.y + (this.height / 2), -1, 0)
@@ -114,10 +118,10 @@ class Enemies {
         };
         this.components = [];
     }
-
+	
+	// ========= SPAWN ENEMY =========
     spawnEnemy(type) {
         const side = Math.random() < 0.5 ? 'left' : 'right'; // randomize side
-        // offset reduced to just outside the edge so they "fly in" immediately
         let x = (side === 'left') ? -type.width : gameArea.canvas.width; // randomize x
         let y = Math.random() * (gameArea.canvas.height - type.height); // randomize y
 
@@ -143,11 +147,12 @@ class Enemies {
         };
         this.components.push(enemy);
     }
-
+	
+	// ========= UPDATE ENEMIES =========
     update() {
         this.components.forEach(e => {
             if (e.track_player) {
-                // ======== PATHFINDING LOGIC (SNAIL) ========
+                // ========= PATHFINDING LOGIC (SNAIL) =========
                 let dx = (playerObj.x + playerObj.width / 2) - (e.x + e.width / 2);
                 let dy = (playerObj.y + playerObj.height / 2) - (e.y + e.height / 2);
                 let angle = Math.atan2(dy, dx);
@@ -155,7 +160,7 @@ class Enemies {
                 e.x += Math.cos(angle) * e.speed;
                 e.y += Math.sin(angle) * e.speed;
             } else {
-                // ======== NORMAL ENEMIES (BOUNCE) ========
+                // ========= NORMAL ENEMIES (BOUNCE) =========
                 e.x += e.speedX;
                 e.y += e.speedY;
 
@@ -177,14 +182,14 @@ class Enemies {
         });
     }
 
-    // ======== RENDER VISUALS ========
+    // ========= RENDER VISUALS =========
     draw() {
         const ctx = gameArea.context;
         this.components.forEach(e => {
             ctx.fillStyle = e.color;
             ctx.fillRect(e.x, e.y, e.width, e.height);
             
-            // ======== HEALTH BAR ========
+            // ========= DRAW ENEMY HEALTH BAR =========
             if (e.hp < e.maxHP) {
               // ------- Outline -------
               let barWidth = Math.max(64, e.width);
@@ -252,7 +257,7 @@ class WaveManager {
         }
     }
 
-    // ======== SPAWN WAVES ========
+    // ========= SPAWN WAVES =========
     startNextWave() {
         this.currentWave++;
         waveSnailDamage = 0; // reset snail damage
@@ -308,7 +313,7 @@ class Bullets {
         this.components.push(bullet);
     }
 
-    // ======== MATH ========
+    // ========= MATH =========
     update() {
         for (let i = this.components.length - 1; i >= 0; i--) {
             let b = this.components[i];
@@ -324,7 +329,7 @@ class Bullets {
         }
     }
 
-    // ======== VISUALS ========
+    // ========= VISUALS =========
     draw() {
         const ctx = gameArea.context;
         this.components.forEach(b => {
@@ -362,11 +367,13 @@ const maxSnailDamage = 75; // If more damage is dealt to the snail, a new wave w
 /* ============================
           TRANSITIONS
    ============================ */
+   
+// ========= INITIALIZE GAME =========
 function init() {
     gameArea.setup();
 }
 
-// ======== START GAME ========
+// ========= START GAME =========
 function startGame() {
     if (!gameStarted || gameOver) {
         gameOver = false;
@@ -462,7 +469,7 @@ function movePlayer() {
     if (keys.d && !keys.a) playerObj.speedX = playerObj.speed;
 }
 
-// ======== SHOOTING KEYBINDS ========
+// ========= SHOOTING KEYBINDS =========
 function calculateShots() {
     if (keys.ArrowRight) playerObj.shootRight();
     if (keys.ArrowLeft) playerObj.shootLeft();
@@ -470,7 +477,7 @@ function calculateShots() {
     if (keys.ArrowDown) playerObj.shootDown();
 }
 
-// ======== COLLISION PROCESSING ENGINE ========
+// ========= COLLISION PROCESSING ENGINE =========
 function isColliding(a, b) {
     if (!a || !b) return false;
     let aW = a.width || 0;
@@ -488,7 +495,7 @@ function checkCollisions() {
     for (let i = enemiesObj.components.length - 1; i >= 0; i--) {
         const enemy = enemiesObj.components[i];
 
-        // ======== PLAYER + ENEMY ========
+        // ========= PLAYER + ENEMY =========
         if (isColliding(playerObj, enemy)) {
             if (enemy.special === "one_hp" && playerObj.hp != 1) {
                 playerObj.hp = 1;
@@ -498,7 +505,7 @@ function checkCollisions() {
             }
         }
 
-        // ======== BULLET + ENEMY ========
+        // ========= BULLET + ENEMY =========
         for (let j = bulletsObj.components.length - 1; j >= 0; j--) {
             const bullet = bulletsObj.components[j];
             // Since rectangular bullets are small, we can treat them as squares for isColliding
