@@ -1,5 +1,20 @@
+// ========= STRUCTURES =========
+const structures = [
+    {
+        blocks: [ // Building blocks
+            { width: 200, height: 20,  x: 300, y: 200 },
+            { width: 20,  height: 150, x: 300, y: 200 },
+            { width: 20,  height: 150, x: 480, y: 200 },
+            { width: 200, height: 20,  x: 300, y: 350 },
+        ],
+        enemies: [ // Enemies array
+            { type: "gary",  amount: 3 },
+            { type: "fast",  amount: 2 },
+        ]
+    }
+];
 
-// ======== TICK ENGINE VARS ========
+// ========= TICK ENGINE VARS =========
 const tickLength = 20;        // 50 ticks per second
 let frameAccumulator = 0;     // Store leftover time after every tick
 let lastTimestamp = 0;        // Store time of previous frame
@@ -19,27 +34,23 @@ class Player {
         this.maxHP = 200;
         this.hp = this.maxHP;
 
-        this.lastDamageTime = 0; // timestamp of last damage event
-        this.damageCooldown = 50; // 1 second damage cooldown
+        this.lastDamageTime = 0;
+        this.damageCooldown = 50;
 
-        this.lastShotTime = 0; // timestamp of last shot
-        this.shotCooldown = 20; // 0.4 seconds
+        this.lastShotTime = 0;
+        this.shotCooldown = 20;
         
-        this.damageTickCounter = -100; // 3 seconds immortality at start (needs to reach 50 to be able to take damage)
-        this.shotTickCounter = 20; // Bypasses shotCooldown so the player can shoot right after the game starts
+        this.damageTickCounter = -100;
+        this.shotTickCounter = 20;
     }
 	
     // ========= UPDATE PLAYER =========
     update() {
-		// Move player icon
-        this.x += this.speedX;
-        this.y += this.speedY;
+        moveEntityWithObstacles(this, this.speedX, this.speedY);
 
-        // Keep player inside canvas
         this.x = Math.max(0, Math.min(this.x, gameArea.canvas.width - this.width));
         this.y = Math.max(0, Math.min(this.y, gameArea.canvas.height - this.height));
-		
-		// Increment cooldown timers by 1
+	
         this.damageTickCounter++;
         this.shotTickCounter++;
     }
@@ -48,24 +59,20 @@ class Player {
     draw() {
         const ctx = gameArea.context;
 
-        // Draw Player Icon
         ctx.fillStyle = "red";
         ctx.fillRect(this.x, this.y, this.width, this.height);
 
-        // ========= DRAW PLAYER HEALTH BAR =========
         const barWidth = 600;
         const barHeight = 30;
         const barX = (gameArea.canvas.width - barWidth) / 2;
         const barY = gameArea.canvas.height - barHeight - 10;
-		
-		// Draw black background + outline
+	
         ctx.fillStyle = "black";
         ctx.fillRect(barX, barY, barWidth, barHeight);
-		
-		// Draw red filler
+	
         ctx.fillStyle = "red";
-        ctx.fillRect(barX, barY, barWidth * (this.hp / this.maxHP), barHeight); // adjust to health value
-		
+        ctx.fillRect(barX, barY, barWidth * (this.hp / this.maxHP), barHeight);
+	
         ctx.fillStyle = "white";
         ctx.font = "16px Arial";
         ctx.textAlign = "center";
@@ -75,8 +82,8 @@ class Player {
     // ========= DAMAGE LOGIC =========
     takeDamage(amount) {
         if (this.damageTickCounter >= this.damageCooldown) {
-            this.hp = Math.max(0, this.hp - amount); // Health cannot go below 0
-            this.damageTickCounter = 0; // Reset the cooldown timer
+            this.hp = Math.max(0, this.hp - amount);
+            this.damageTickCounter = 0;
         }
     }
     
@@ -110,26 +117,26 @@ class Player {
 class Enemies {
     constructor() {
         this.types = {
-            gary: { width:80, height:80, speed:5, maxHP:25, hp:25, damage:35, color:"blue", cost:15, special:null, track_player:false },
-            fast:  { width:50, height:50, speed:8, maxHP:10, hp:10, damage:15, color:"yellow", cost:10, special:null, track_player:false },
-            tank:  { width:150, height: 150, speed:3, maxHP:100, hp:100, damage:60, color:"purple", cost:50, special:null, track_player: false },
-            tiny:  { width:25, height:25, speed:4, maxHP:5, hp:5, damage:10, color:"lime", cost:5, special:null, track_player: false },
-            snail: { width:15, height:15, speed:1.5, maxHP:1000, hp:1000, damage:1, color:"black", cost:500, special:'one_hp', track_player:true }
+            gary:  { width:80,  height:80,  speed:5,   maxHP:25,   hp:25,   damage:35, color:"blue",   cost:15,  special:null,     track_player:false },
+            fast:  { width:50,  height:50,  speed:8,   maxHP:10,   hp:10,   damage:15, color:"yellow", cost:10,  special:null,     track_player:false },
+            tank:  { width:150, height:150, speed:3,   maxHP:100,  hp:100,  damage:60, color:"purple", cost:50,  special:null,     track_player:false },
+            tiny:  { width:25,  height:25,  speed:4,   maxHP:5,    hp:5,    damage:10, color:"lime",   cost:5,   special:null,     track_player:false },
+            snail: { width:15,  height:15,  speed:1.5, maxHP:1000, hp:1000, damage:1,  color:"black",  cost:250, special:'one_hp', track_player:true  }
         };
         this.components = [];
     }
 	
-	// ========= SPAWN ENEMY =========
+    // ========= SPAWN ENEMY =========
     spawnEnemy(type) {
+		// Randomize spawn location
         const side = Math.random() < 0.5 ? 'left' : 'right'; // randomize side
-        let x = (side === 'left') ? -type.width : gameArea.canvas.width; // randomize x
-        let y = Math.random() * (gameArea.canvas.height - type.height); // randomize y
+        let x = (side === 'left') ? -type.width : gameArea.canvas.width; // calculate x 
+        let y = Math.random() * (gameArea.canvas.height - type.height); // calculate y
 
         const centerX = gameArea.canvas.width / 2;
         const centerY = gameArea.canvas.height / 2;
         let dx = (side === 'left') ? 1 : -1;
         
-        // Calculate vertical direction toward the horizontal center line
         let dy = (centerY - y) / (gameArea.canvas.height / 2);
 
         const enemy = {
@@ -148,39 +155,63 @@ class Enemies {
         this.components.push(enemy);
     }
 	
-	// ========= UPDATE ENEMIES =========
-    update() {
-        this.components.forEach(e => {
-            if (e.track_player) {
-                // ========= PATHFINDING LOGIC (SNAIL) =========
-                let dx = (playerObj.x + playerObj.width / 2) - (e.x + e.width / 2);
-                let dy = (playerObj.y + playerObj.height / 2) - (e.y + e.height / 2);
-                let angle = Math.atan2(dy, dx);
-                
-                e.x += Math.cos(angle) * e.speed;
-                e.y += Math.sin(angle) * e.speed;
-            } else {
-                // ========= NORMAL ENEMIES (BOUNCE) =========
-                e.x += e.speedX;
-                e.y += e.speedY;
+    // ========= UPDATE ENEMIES =========
+	update() {
+		this.components.forEach(e => {
 
-                // Only bounce if heading OUTSIDE the bounds
-                if (e.x <= 0 && e.speedX < 0) {
-                    e.x = 0; e.speedX = Math.abs(e.speedX); 
-                }
-                else if (e.x + e.width >= gameArea.canvas.width && e.speedX > 0) { 
-                    e.x = gameArea.canvas.width - e.width; e.speedX = -Math.abs(e.speedX); 
-                }
+			// ------ TRACKER ENEMIES ------
+			if (e.track_player) {
+				// calculate distance to the player (from center to center)
+				const dx = (playerObj.x + playerObj.width / 2) - (e.x + e.width / 2);
+				const dy = (playerObj.y + playerObj.height / 2) - (e.y + e.height / 2);
+				
+				// calculate movement angle
+				const angle = Math.atan2(dy, dx);
+				
+				// calculate movement speeds
+				const moveX = Math.cos(angle) * e.speed;
+				const moveY = Math.sin(angle) * e.speed;
 
-                if (e.y <= 0 && e.speedY < 0) { 
-                    e.y = 0; e.speedY = Math.abs(e.speedY); 
-                }
-                else if (e.y + e.height >= gameArea.canvas.height && e.speedY > 0) { 
-                    e.y = gameArea.canvas.height - e.height; e.speedY = -Math.abs(e.speedY); 
-                }
-            }
-        });
-    }
+				// Move towards the player without crossing obstacles
+				moveEntityWithObstacles(e, moveX, moveY);
+			}
+
+			// ------ NORMAL ENEMIES ------
+			else {
+				const collision = moveEntityWithObstacles(e, e.speedX, e.speedY); // get blockedX and blockedY values
+
+				// ==== Bounce off obstacles ====
+				if (collision.blockedX) { // movement is blocked on the x axis
+					e.speedX *= -1; // invert speed
+				}
+				if (collision.blockedY) { // movement is blocked on the y axis
+					e.speedY *= -1; // invert speed
+				}
+
+				// ==== Bounce off the canvas boundaries ====
+				// LEFT BORDER
+				if (e.x <= 0 && e.speedX < 0) {
+					e.x = 0; // keep enemy inside canvas
+					e.speedX = Math.abs(e.speedX); // make speed positive so that the enemy moves towards +x
+				}
+				// RIGHT BORDER
+				else if (e.x + e.width >= gameArea.canvas.width && e.speedX > 0) {
+					e.x = gameArea.canvas.width - e.width;
+					e.speedX = -Math.abs(e.speedX);
+				}
+				// TOP BORDER
+				if (e.y <= 0 && e.speedY < 0) {
+					e.y = 0;
+					e.speedY = Math.abs(e.speedY);
+				}
+				// BOTTOM BORDER
+				else if (e.y + e.height >= gameArea.canvas.height && e.speedY > 0) {
+					e.y = gameArea.canvas.height - e.height;
+					e.speedY = -Math.abs(e.speedY);
+				}
+			}
+		});
+	}
 
     // ========= RENDER VISUALS =========
     draw() {
@@ -189,20 +220,17 @@ class Enemies {
             ctx.fillStyle = e.color;
             ctx.fillRect(e.x, e.y, e.width, e.height);
             
-            // ========= DRAW ENEMY HEALTH BAR =========
             if (e.hp < e.maxHP) {
-              // ------- Outline -------
               let barWidth = Math.max(64, e.width);
               let barHeight = Math.max(8, e.height / 10);
 
-              let barX = (e.x + e.width / 2) - (barWidth / 2); // Centered above enemy
-              let barY = e.y - barHeight - 5; // 5px vertical offset
+              let barX = (e.x + e.width / 2) - (barWidth / 2);
+              let barY = e.y - barHeight - 5;
 
               ctx.fillStyle = "black";
               ctx.fillRect(barX, barY, barWidth, barHeight);
 
-              // ------- Filler --------
-              const outlineWeight = 1; // Weight of the black outline
+              const outlineWeight = 1;
               let fillerWidth = (e.hp / e.maxHP) * (barWidth - outlineWeight * 2)
               let fillerHeight = barHeight - outlineWeight * 2;
 
@@ -221,32 +249,29 @@ class Enemies {
    ============================ */
 class WaveManager {
     constructor() {
-        this.currentWave = 0; // Tracks the wave number
-        this.spawnQueue = []; // The queue of all enemies waiting to enter the game
+        this.currentWave = 0;
+        this.spawnQueue = [];
         this.spawnInterval = 40; 
         this.spawnTimer = 0;
-        this.duration = 0; // Duration of the wave
-        this.maxDuration = 3000; // Max duration of each wave (60 seconds)
-        this.baseBudget = 30; // Budget for each wave
+        this.duration = 0;
+        this.maxDuration = 3000;
+        this.baseBudget = 30;
     }
 
+    // ========= UPDATE WAVES =========
     update() {
-        // list of active enemies
         const activeEnemies = enemiesObj.components.filter(e => e.special !== 'one_hp').length;
         this.duration++;
 	
         if (this.spawnQueue.length === 0) {
-            if (activeEnemies === 0 || this.duration >= this.maxDuration || waveSnailDamage >= maxSnailDamage) {
-                // HAS to spawn if there are 0 enemies, max wave duration was surpassed, or the snail took enough damage
+            if (activeEnemies === 0 || /* this.duration >= this.maxDuration || */ waveSnailDamage >= maxSnailDamage) {
                 this.startNextWave();
             } else if (activeEnemies <= 2) {
-                // 1% chance to start new wave (runs every tick)
                 if (Math.floor(Math.random() * 100) == 1) {
                     this.startNextWave();
                 }
             }
         }
-        // Spawn enemies from the queue
         if (this.spawnQueue.length > 0) {
             this.spawnTimer++;
             if (this.spawnTimer >= this.spawnInterval) {
@@ -260,16 +285,14 @@ class WaveManager {
     // ========= SPAWN WAVES =========
     startNextWave() {
         this.currentWave++;
-        waveSnailDamage = 0; // reset snail damage
+        waveSnailDamage = 0;
         let budget = this.baseBudget + (this.currentWave * 20);
         this.duration = 0;
 
         if (this.currentWave === 1) {
             enemiesObj.spawnEnemy(enemiesObj.types.snail);
         }
-
         const enemyOptions = Object.values(enemiesObj.types).filter(t => t.cost < 500);
-
         while (budget >= 5) {
             let possible = enemyOptions.filter(t => t.cost <= budget);
             if (possible.length === 0) break;
@@ -277,9 +300,32 @@ class WaveManager {
             this.spawnQueue.push(choice);
             budget -= choice.cost;
         }
-
         this.spawnInterval = Math.max(10, 40 - (this.currentWave * 2));
         if(playerObj) playerObj.hp = Math.min(playerObj.maxHP, playerObj.hp + 50);
+    }
+}
+
+/* ============================
+     STRUCTURE MANAGER CLASS
+   ============================ */
+class StructureManager {
+    constructor() {
+        this.isActive = false;
+        this.currentBlocks = []; // blocks currently on the arena
+    }
+	// ------ Spawn Structure ------
+    spawnStructure(structureDef) {
+        this.isActive = true;
+        this.currentBlocks = structureDef.blocks;
+    }
+	// ------ Draw Structure ------
+    draw() {
+        if (!this.isActive) return; // do nothing if class is not active
+        const ctx = gameArea.context;
+        this.currentBlocks.forEach(b => {
+            ctx.fillStyle = "gray";
+            ctx.fillRect(b.x, b.y, b.width, b.height);
+        });
     }
 }
 
@@ -289,13 +335,11 @@ class WaveManager {
 class Bullets {
     constructor() {
         this.types = {
-            // Set parameters
             default: { width: 30, height: 8, speed: 20, damage: 7, color: "#1a1a1a" }
         };
         this.components = [];
     }
 
-    // Spawn bullet with given parameters
     spawnBullet(posX, posY, vectorX, vectorY) {
         const type = this.types.default;
         const bullet = {
@@ -305,7 +349,6 @@ class Bullets {
             height: type.height,
             speedX: type.speed * vectorX,
             speedY: type.speed * vectorY,
-            // calculate direction of the bullet
             angle: Math.atan2(vectorY, vectorX),
             damage: type.damage,
             color: type.color
@@ -317,11 +360,9 @@ class Bullets {
     update() {
         for (let i = this.components.length - 1; i >= 0; i--) {
             let b = this.components[i];
-            // Move bullet
             b.x += b.speedX;
             b.y += b.speedY;
 			
-            // Destroy bullets outside the canvas
             if (b.x < -50 || b.x > gameArea.canvas.width + 50 || 
                 b.y < -50 || b.y > gameArea.canvas.height + 50) {
                 this.components.splice(i, 1);
@@ -333,15 +374,14 @@ class Bullets {
     draw() {
         const ctx = gameArea.context;
         this.components.forEach(b => {
-            ctx.save(); // Save the canvas state
-            ctx.translate(b.x, b.y); // Move origin to the bullet
-            ctx.rotate(b.angle); // Rotate the canvas
+            ctx.save();
+            ctx.translate(b.x, b.y);
+            ctx.rotate(b.angle);
             
             ctx.fillStyle = b.color;
-            // Center the rectangle so it rotates around its middle
             ctx.fillRect(-b.width / 2, -b.height / 2, b.width, b.height);
             
-            ctx.restore(); // Restore canvas to normal
+            ctx.restore();
         });
     }
 }
@@ -353,21 +393,21 @@ let playerObj;
 let enemiesObj = new Enemies();
 let bulletsObj = new Bullets();
 let waveManager = new WaveManager();
+let structureManager = new StructureManager();
 let keys = { w:false, a:false, s:false, d:false, ArrowLeft:false, ArrowUp:false, ArrowRight:false, ArrowDown:false };
-let gameDuration = 0; // Store game duration in ticks
+let gameDuration = 0;
 
-// ------- Game States -------
-let gameStarted = false; // Track if game is currently in session
-let isPaused = true;  // Game starts paused in the menu
-let gameOver = false; // Game over state
+let gameStarted = false;
+let isPaused = true;
+let gameOver = false;
 
-let waveSnailDamage = 0; // Track damage dealt to the snail every wave
-const maxSnailDamage = 75; // If more damage is dealt to the snail, a new wave will spawn
+let waveSnailDamage = 0;
+const maxSnailDamage = 75;
 
 /* ============================
           TRANSITIONS
    ============================ */
-   
+
 // ========= INITIALIZE GAME =========
 function init() {
     gameArea.setup();
@@ -397,6 +437,8 @@ function startGame() {
     document.getElementById("main-menu-overlay").classList.add("hidden");
     document.getElementById("pause-menu-overlay").classList.add("hidden");
     document.getElementById("game-over-menu-overlay").classList.add("hidden");
+	
+	structureManager.spawnStructure(structures[0]); // Spawn structure for testing
 }
 
 // ========= RESUME GAME =========
@@ -480,22 +522,60 @@ function calculateShots() {
 // ========= COLLISION PROCESSING ENGINE =========
 function isColliding(a, b) {
     if (!a || !b) return false;
-    let aW = a.width || 0;
-    let aH = a.height || 0;
-    let bW = b.width || 0;
-    let bH = b.height || 0;
-    return !(a.x + aW < b.x || a.x > b.x + bW || a.y + aH < b.y || a.y > b.y + bH);
+
+    return !(
+        a.x + a.width <= b.x ||
+        a.x >= b.x + b.width ||
+        a.y + a.height <= b.y ||
+        a.y >= b.y + b.height
+    );
 }
+
+
+function moveEntityWithObstacles(entity, dx, dy) {
+    let blockedX = false;
+    let blockedY = false;
+
+    // Attempt horizontal movement
+    entity.x += dx;
+    for (const block of structureManager.currentBlocks) {
+        if (isColliding(entity, block)) {
+            // Snap to the obstacle's edge
+            if (dx > 0) {
+                entity.x = block.x - entity.width;
+            } else if (dx < 0) {
+                entity.x = block.x + block.width;
+            }
+            blockedX = true;
+            break;
+        }
+    }
+    // Attempt vertical movement
+    entity.y += dy;
+    for (const block of structureManager.currentBlocks) {
+        if (isColliding(entity, block)) {
+            // Snap to the obstacle's edge
+            if (dy > 0) {
+                entity.y = block.y - entity.height;
+            } else if (dy < 0) {
+                entity.y = block.y + block.height;
+            }
+
+            blockedY = true;
+            break;
+        }
+    }
+    return { blockedX, blockedY };
+}
+
 
 /* ===============================
         PROCESS ALL COLLISIONS
    =============================== */
 function checkCollisions() {
-    // Loop through enemies
     for (let i = enemiesObj.components.length - 1; i >= 0; i--) {
         const enemy = enemiesObj.components[i];
 
-        // ========= PLAYER + ENEMY =========
         if (isColliding(playerObj, enemy)) {
             if (enemy.special === "one_hp" && playerObj.hp != 1) {
                 playerObj.hp = 1;
@@ -505,25 +585,21 @@ function checkCollisions() {
             }
         }
 
-        // ========= BULLET + ENEMY =========
         for (let j = bulletsObj.components.length - 1; j >= 0; j--) {
             const bullet = bulletsObj.components[j];
-            // Since rectangular bullets are small, we can treat them as squares for isColliding
             const bBox = { x: bullet.x - 5, y: bullet.y - 5, width: 10, height: 10 };
             
             if (isColliding(bBox, enemy)) {
-                enemy.hp -= bullet.damage; // Damage the enemy
-                bulletsObj.components.splice(j, 1); // Remove the bullet
+                enemy.hp -= bullet.damage;
+                bulletsObj.components.splice(j, 1);
                 
-                // Track damage dealt if snail was hit
                 if (enemy.special === "one_hp") {
                     waveSnailDamage += bullet.damage;
                 }
-                // If enemy dies
                 if (enemy.hp <= 0) {
                     enemiesObj.components.splice(i, 1);
                 }
-                break; // Stop checking this bullet
+                break;
             }
         }
     }
@@ -533,7 +609,6 @@ function checkCollisions() {
               UPDATE
    ============================ */
 function update() {
-    // Don't process logic if paused or not started
     if (!gameStarted || isPaused || gameOver) return true; 
 
     movePlayer();
@@ -549,12 +624,11 @@ function update() {
 
     if (playerObj.hp <= 0) {
         handleGameOver();
-        return false; // Return false to tell the engine to stop updating
+        return false;
     }
     
-    // track the tick in the game clock
     gameDuration++;
-    return true; // Keep going
+    return true;
 }
 
 /* ============================
@@ -564,10 +638,13 @@ function renderGame() {
     gameArea.clear();
     
     if (gameStarted && playerObj && gameArea.context) {
+		// ------ Draw Objects ------
         playerObj.draw();
         enemiesObj.draw();
         bulletsObj.draw();
-
+		structureManager.draw();
+		
+		// ------ Wave Counter ------
         const ctx = gameArea.context;
         ctx.fillStyle = "black";
         ctx.font = "bold 24px Arial";
@@ -611,7 +688,7 @@ document.addEventListener("keyup", e => {
         : e.key.toLowerCase();
     if (keys.hasOwnProperty(key)) keys[key] = false;
 });
-// Responsive resize
+
 window.addEventListener("resize", () => {
     gameArea.canvas.width = window.innerWidth;
     gameArea.canvas.height = window.innerHeight;
