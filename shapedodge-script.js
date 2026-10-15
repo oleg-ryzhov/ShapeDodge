@@ -19,7 +19,7 @@ const tickLength = 20;        // 50 ticks per second
 let frameAccumulator = 0;     // Store leftover time after every tick
 let lastTimestamp = 0;        // Store time of previous frame
 
-/* ============================	
+/* ============================
           PLAYER CLASS
    ============================ */
 class Player {
@@ -39,18 +39,18 @@ class Player {
 
         this.lastShotTime = 0;
         this.shotCooldown = 20;
-        
+
         this.damageTickCounter = -100;
         this.shotTickCounter = 20;
     }
-	
+
     // ========= UPDATE PLAYER =========
     update() {
         moveEntityWithObstacles(this, this.speedX, this.speedY);
 
         this.x = Math.max(0, Math.min(this.x, gameArea.canvas.width - this.width));
         this.y = Math.max(0, Math.min(this.y, gameArea.canvas.height - this.height));
-	
+
         this.damageTickCounter++;
         this.shotTickCounter++;
     }
@@ -66,19 +66,19 @@ class Player {
         const barHeight = 30;
         const barX = (gameArea.canvas.width - barWidth) / 2;
         const barY = gameArea.canvas.height - barHeight - 10;
-	
+
         ctx.fillStyle = "black";
         ctx.fillRect(barX, barY, barWidth, barHeight);
-	
+
         ctx.fillStyle = "red";
         ctx.fillRect(barX, barY, barWidth * (this.hp / this.maxHP), barHeight);
-	
+
         ctx.fillStyle = "white";
         ctx.font = "16px Arial";
         ctx.textAlign = "center";
         ctx.fillText(Math.ceil(this.hp) + " / " + this.maxHP, barX + barWidth / 2, barY + barHeight - 5);
     }
-	
+
     // ========= DAMAGE LOGIC =========
     takeDamage(amount) {
         if (this.damageTickCounter >= this.damageCooldown) {
@@ -86,7 +86,7 @@ class Player {
             this.damageTickCounter = 0;
         }
     }
-    
+
     // ========= SHOOTING LOGIC =========
     shootLeft() {
         if (this.shotTickCounter >= this.shotCooldown) {
@@ -125,18 +125,18 @@ class Enemies {
         };
         this.components = [];
     }
-	
+
     // ========= SPAWN ENEMY =========
     spawnEnemy(type) {
-		// Randomize spawn location
+        // Randomize spawn location
         const side = Math.random() < 0.5 ? 'left' : 'right'; // randomize side
-        let x = (side === 'left') ? -type.width : gameArea.canvas.width; // calculate x 
+        let x = (side === 'left') ? -type.width : gameArea.canvas.width; // calculate x
         let y = Math.random() * (gameArea.canvas.height - type.height); // calculate y
 
         const centerX = gameArea.canvas.width / 2;
         const centerY = gameArea.canvas.height / 2;
         let dx = (side === 'left') ? 1 : -1;
-        
+
         let dy = (centerY - y) / (gameArea.canvas.height / 2);
 
         const enemy = {
@@ -154,64 +154,64 @@ class Enemies {
         };
         this.components.push(enemy);
     }
-	
+
     // ========= UPDATE ENEMIES =========
-	update() {
-		this.components.forEach(e => {
+    update() {
+        this.components.forEach(e => {
 
-			// ------ TRACKER ENEMIES ------
-			if (e.track_player) {
-				// calculate distance to the player (from center to center)
-				const dx = (playerObj.x + playerObj.width / 2) - (e.x + e.width / 2);
-				const dy = (playerObj.y + playerObj.height / 2) - (e.y + e.height / 2);
-				
-				// calculate movement angle
-				const angle = Math.atan2(dy, dx);
-				
-				// calculate movement speeds
-				const moveX = Math.cos(angle) * e.speed;
-				const moveY = Math.sin(angle) * e.speed;
+            // ------ TRACKER ENEMIES ------
+            if (e.track_player) {
+                // calculate distance to the player (from center to center)
+                const dx = (playerObj.x + playerObj.width / 2) - (e.x + e.width / 2);
+                const dy = (playerObj.y + playerObj.height / 2) - (e.y + e.height / 2);
 
-				// Move towards the player without crossing obstacles
-				moveEntityWithObstacles(e, moveX, moveY);
-			}
+                // calculate movement angle
+                const angle = Math.atan2(dy, dx);
 
-			// ------ NORMAL ENEMIES ------
-			else {
-				const collision = moveEntityWithObstacles(e, e.speedX, e.speedY); // get blockedX and blockedY values
+                // calculate movement speeds
+                const moveX = Math.cos(angle) * e.speed;
+                const moveY = Math.sin(angle) * e.speed;
 
-				// ==== Bounce off obstacles ====
-				if (collision.blockedX) { // movement is blocked on the x axis
-					e.speedX *= -1; // invert speed
-				}
-				if (collision.blockedY) { // movement is blocked on the y axis
-					e.speedY *= -1; // invert speed
-				}
+                // Move towards the player without crossing obstacles
+                moveEntityWithObstacles(e, moveX, moveY);
+            }
 
-				// ==== Bounce off the canvas boundaries ====
-				// LEFT BORDER
-				if (e.x <= 0 && e.speedX < 0) {
-					e.x = 0; // keep enemy inside canvas
-					e.speedX = Math.abs(e.speedX); // make speed positive so that the enemy moves towards +x
-				}
-				// RIGHT BORDER
-				else if (e.x + e.width >= gameArea.canvas.width && e.speedX > 0) {
-					e.x = gameArea.canvas.width - e.width;
-					e.speedX = -Math.abs(e.speedX);
-				}
-				// TOP BORDER
-				if (e.y <= 0 && e.speedY < 0) {
-					e.y = 0;
-					e.speedY = Math.abs(e.speedY);
-				}
-				// BOTTOM BORDER
-				else if (e.y + e.height >= gameArea.canvas.height && e.speedY > 0) {
-					e.y = gameArea.canvas.height - e.height;
-					e.speedY = -Math.abs(e.speedY);
-				}
-			}
-		});
-	}
+            // ------ NORMAL ENEMIES ------
+            else {
+                const collision = moveEntityWithObstacles(e, e.speedX, e.speedY); // get blockedX and blockedY values
+
+                // ==== Bounce off obstacles ====
+                if (collision.blockedX) { // movement is blocked on the x axis
+                    e.speedX *= -1; // invert speed
+                }
+                if (collision.blockedY) { // movement is blocked on the y axis
+                    e.speedY *= -1; // invert speed
+                }
+
+                // ==== Bounce off the canvas boundaries ====
+                // LEFT BORDER
+                if (e.x <= 0 && e.speedX < 0) {
+                    e.x = 0; // keep enemy inside canvas
+                    e.speedX = Math.abs(e.speedX); // make speed positive so that the enemy moves towards +x
+                }
+                // RIGHT BORDER
+                else if (e.x + e.width >= gameArea.canvas.width && e.speedX > 0) {
+                    e.x = gameArea.canvas.width - e.width;
+                    e.speedX = -Math.abs(e.speedX);
+                }
+                // TOP BORDER
+                if (e.y <= 0 && e.speedY < 0) {
+                    e.y = 0;
+                    e.speedY = Math.abs(e.speedY);
+                }
+                // BOTTOM BORDER
+                else if (e.y + e.height >= gameArea.canvas.height && e.speedY > 0) {
+                    e.y = gameArea.canvas.height - e.height;
+                    e.speedY = -Math.abs(e.speedY);
+                }
+            }
+        });
+    }
 
     // ========= RENDER VISUALS =========
     draw() {
@@ -219,26 +219,26 @@ class Enemies {
         this.components.forEach(e => {
             ctx.fillStyle = e.color;
             ctx.fillRect(e.x, e.y, e.width, e.height);
-            
+
             if (e.hp < e.maxHP) {
-              let barWidth = Math.max(64, e.width);
-              let barHeight = Math.max(8, e.height / 10);
+                let barWidth = Math.max(64, e.width);
+                let barHeight = Math.max(8, e.height / 10);
 
-              let barX = (e.x + e.width / 2) - (barWidth / 2);
-              let barY = e.y - barHeight - 5;
+                let barX = (e.x + e.width / 2) - (barWidth / 2);
+                let barY = e.y - barHeight - 5;
 
-              ctx.fillStyle = "black";
-              ctx.fillRect(barX, barY, barWidth, barHeight);
+                ctx.fillStyle = "black";
+                ctx.fillRect(barX, barY, barWidth, barHeight);
 
-              const outlineWeight = 1;
-              let fillerWidth = (e.hp / e.maxHP) * (barWidth - outlineWeight * 2)
-              let fillerHeight = barHeight - outlineWeight * 2;
+                const outlineWeight = 1;
+                let fillerWidth = (e.hp / e.maxHP) * (barWidth - outlineWeight * 2)
+                let fillerHeight = barHeight - outlineWeight * 2;
 
-              let fillerX = barX + outlineWeight;
-              let fillerY = barY + outlineWeight;
+                let fillerX = barX + outlineWeight;
+                let fillerY = barY + outlineWeight;
 
-              ctx.fillStyle = "red";
-              ctx.fillRect(fillerX, fillerY, fillerWidth, fillerHeight);
+                ctx.fillStyle = "red";
+                ctx.fillRect(fillerX, fillerY, fillerWidth, fillerHeight);
             }
         });
     }
@@ -251,7 +251,7 @@ class WaveManager {
     constructor() {
         this.currentWave = 0;
         this.spawnQueue = [];
-        this.spawnInterval = 40; 
+        this.spawnInterval = 40;
         this.spawnTimer = 0;
         this.duration = 0;
         this.maxDuration = 3000;
@@ -262,7 +262,7 @@ class WaveManager {
     update() {
         const activeEnemies = enemiesObj.components.filter(e => e.special !== 'one_hp').length;
         this.duration++;
-	
+
         if (this.spawnQueue.length === 0) {
             if (activeEnemies === 0 || /* this.duration >= this.maxDuration || */ waveSnailDamage >= maxSnailDamage) {
                 this.startNextWave();
@@ -301,7 +301,7 @@ class WaveManager {
             budget -= choice.cost;
         }
         this.spawnInterval = Math.max(10, 40 - (this.currentWave * 2));
-        if(playerObj) playerObj.hp = Math.min(playerObj.maxHP, playerObj.hp + 50);
+        if (playerObj) playerObj.hp = Math.min(playerObj.maxHP, playerObj.hp + 50);
     }
 }
 
@@ -313,12 +313,14 @@ class StructureManager {
         this.isActive = false;
         this.currentBlocks = []; // blocks currently on the arena
     }
-	// ------ Spawn Structure ------
+
+    // ------ Spawn Structure ------
     spawnStructure(structureDef) {
         this.isActive = true;
         this.currentBlocks = structureDef.blocks;
     }
-	// ------ Draw Structure ------
+
+    // ------ Draw Structure ------
     draw() {
         if (!this.isActive) return; // do nothing if class is not active
         const ctx = gameArea.context;
@@ -343,7 +345,7 @@ class Bullets {
     spawnBullet(posX, posY, vectorX, vectorY) {
         const type = this.types.default;
         const bullet = {
-            x: posX, 
+            x: posX,
             y: posY,
             width: type.width,
             height: type.height,
@@ -362,8 +364,31 @@ class Bullets {
             let b = this.components[i];
             b.x += b.speedX;
             b.y += b.speedY;
-			
-            if (b.x < -50 || b.x > gameArea.canvas.width + 50 || 
+
+            // Calculate the bullet hitbox, accounting for its horizontal or vertical orientation
+            const horizontal = b.speedX !== 0;
+            const bulletBox = {
+                x: b.x - (horizontal ? b.width : b.height) / 2,
+                y: b.y - (horizontal ? b.height : b.width) / 2,
+                width: horizontal ? b.width : b.height,
+                height: horizontal ? b.height : b.width
+            };
+
+            // Remove the bullet if it collides with an obstacle
+            let hitObstacle = false;
+            for (const block of structureManager.currentBlocks) {
+                if (isColliding(bulletBox, block)) {
+                    this.components.splice(i, 1);
+                    hitObstacle = true;
+                    break;
+                }
+            }
+
+            // Skip the rest of this iteration if the bullet was removed
+            if (hitObstacle) continue;
+
+            // Stop tracking bullets outside canvas
+            if (b.x < -50 || b.x > gameArea.canvas.width + 50 ||
                 b.y < -50 || b.y > gameArea.canvas.height + 50) {
                 this.components.splice(i, 1);
             }
@@ -377,10 +402,10 @@ class Bullets {
             ctx.save();
             ctx.translate(b.x, b.y);
             ctx.rotate(b.angle);
-            
+
             ctx.fillStyle = b.color;
             ctx.fillRect(-b.width / 2, -b.height / 2, b.width, b.height);
-            
+
             ctx.restore();
         });
     }
@@ -437,8 +462,8 @@ function startGame() {
     document.getElementById("main-menu-overlay").classList.add("hidden");
     document.getElementById("pause-menu-overlay").classList.add("hidden");
     document.getElementById("game-over-menu-overlay").classList.add("hidden");
-	
-	structureManager.spawnStructure(structures[0]); // Spawn structure for testing
+
+    structureManager.spawnStructure(structures[0]); // Spawn structure for testing
 }
 
 // ========= RESUME GAME =========
@@ -488,9 +513,9 @@ const gameArea = {
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
         this.context = this.canvas.getContext("2d");
-        
+
         lastTimestamp = performance.now();
-        requestAnimationFrame(engineLoop); 
+        requestAnimationFrame(engineLoop);
     },
     clear: function() {
         if (this.context) {
@@ -550,6 +575,7 @@ function moveEntityWithObstacles(entity, dx, dy) {
             break;
         }
     }
+
     // Attempt vertical movement
     entity.y += dy;
     for (const block of structureManager.currentBlocks) {
@@ -588,11 +614,11 @@ function checkCollisions() {
         for (let j = bulletsObj.components.length - 1; j >= 0; j--) {
             const bullet = bulletsObj.components[j];
             const bBox = { x: bullet.x - 5, y: bullet.y - 5, width: 10, height: 10 };
-            
+
             if (isColliding(bBox, enemy)) {
                 enemy.hp -= bullet.damage;
                 bulletsObj.components.splice(j, 1);
-                
+
                 if (enemy.special === "one_hp") {
                     waveSnailDamage += bullet.damage;
                 }
@@ -609,16 +635,16 @@ function checkCollisions() {
               UPDATE
    ============================ */
 function update() {
-    if (!gameStarted || isPaused || gameOver) return true; 
+    if (!gameStarted || isPaused || gameOver) return true;
 
     movePlayer();
-    
+
     playerObj.update();
     enemiesObj.update();
     bulletsObj.update();
-    
+
     waveManager.update();
-    
+
     calculateShots();
     checkCollisions();
 
@@ -626,7 +652,7 @@ function update() {
         handleGameOver();
         return false;
     }
-    
+
     gameDuration++;
     return true;
 }
@@ -636,15 +662,15 @@ function update() {
    ============================ */
 function renderGame() {
     gameArea.clear();
-    
+
     if (gameStarted && playerObj && gameArea.context) {
-		// ------ Draw Objects ------
+        // ------ Draw Objects ------
         playerObj.draw();
         enemiesObj.draw();
         bulletsObj.draw();
-		structureManager.draw();
-		
-		// ------ Wave Counter ------
+        structureManager.draw();
+
+        // ------ Wave Counter ------
         const ctx = gameArea.context;
         ctx.fillStyle = "black";
         ctx.font = "bold 24px Arial";
@@ -664,7 +690,7 @@ function engineLoop(currentTime) {
 
     let running = true;
     while (frameAccumulator >= tickLength) {
-        running = update(); 
+        running = update();
         frameAccumulator -= tickLength;
     }
 
@@ -682,6 +708,7 @@ document.addEventListener("keydown", e => {
     if (keys.hasOwnProperty(key)) keys[key] = true;
     if (e.key === "Escape" || key === "p") togglePause();
 });
+
 document.addEventListener("keyup", e => {
     const key = e.key.startsWith("Arrow")
         ? e.key
