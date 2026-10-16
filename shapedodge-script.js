@@ -1,17 +1,20 @@
 // ========= STRUCTURES =========
 const structures = [
     {
-        blocks: [ // Building blocks
-            { width: 200, height: 20,  x: 300, y: 200 },
-            { width: 20,  height: 150, x: 300, y: 200 },
-            { width: 20,  height: 150, x: 480, y: 200 },
-            { width: 200, height: 20,  x: 300, y: 350 },
-        ],
-        enemies: [ // Enemies array
-            { type: "gary",  amount: 3 },
-            { type: "fast",  amount: 2 },
-        ]
-    }
+    blocks: [
+        { width: 150, height: 120, x: 120, y: 120 },
+        { width: 150, height: 120, x: 530, y: 120 },
+        { width: 150, height: 120, x: 530, y: 470 },
+        { width: 150, height: 120, x: 120, y: 470 },
+        { width: 260, height: 20, x: 270, y: 120 },
+        { width: 30, height: 470, x: 850, y: 120 },
+    ],
+    enemies: [
+        { type: "gary", amount: 1 },
+        { type: "fast", amount: 1 },
+        { type: "tiny", amount: 1 },
+    ]
+    },
 ];
 
 // ========= TICK ENGINE VARS =========
@@ -251,10 +254,10 @@ class WaveManager {
     constructor() {
         this.currentWave = 0;
         this.spawnQueue = [];
-        this.spawnInterval = 40;
+        this.spawnInterval = 40; // 0.8 seconds
         this.spawnTimer = 0;
         this.duration = 0;
-        this.maxDuration = 3000;
+        this.maxDuration = 3000; // 60 seconds
         this.baseBudget = 30;
     }
 
@@ -272,6 +275,7 @@ class WaveManager {
                 }
             }
         }
+
         if (this.spawnQueue.length > 0) {
             this.spawnTimer++;
             if (this.spawnTimer >= this.spawnInterval) {
@@ -285,23 +289,29 @@ class WaveManager {
     // ========= SPAWN WAVES =========
     startNextWave() {
         this.currentWave++;
-        waveSnailDamage = 0;
-        let budget = this.baseBudget + (this.currentWave * 20);
-        this.duration = 0;
+        if (this.currentWave != 3) { // spawn normal wave
+            waveSnailDamage = 0;
+            let budget = this.baseBudget + (this.currentWave * 20);
+            this.duration = 0;
 
-        if (this.currentWave === 1) {
-            enemiesObj.spawnEnemy(enemiesObj.types.snail);
+            if (this.currentWave === 1) {
+                enemiesObj.spawnEnemy(enemiesObj.types.snail);
+            }
+
+            const enemyOptions = Object.values(enemiesObj.types).filter(t => t.cost < 500);
+            while (budget >= 5) {
+                let possible = enemyOptions.filter(t => t.cost <= budget);
+                if (possible.length === 0) break;
+                let choice = possible[Math.floor(Math.random() * possible.length)];
+                this.spawnQueue.push(choice);
+                budget -= choice.cost;
+            }
+
+            this.spawnInterval = Math.max(10, 40 - (this.currentWave * 2));
+        } else { // spawn structure on wave 6
+            structureManager.spawnStructure(structures[0]);
+            if (playerObj) playerObj.hp = Math.min(playerObj.maxHP, playerObj.hp + 50);
         }
-        const enemyOptions = Object.values(enemiesObj.types).filter(t => t.cost < 500);
-        while (budget >= 5) {
-            let possible = enemyOptions.filter(t => t.cost <= budget);
-            if (possible.length === 0) break;
-            let choice = possible[Math.floor(Math.random() * possible.length)];
-            this.spawnQueue.push(choice);
-            budget -= choice.cost;
-        }
-        this.spawnInterval = Math.max(10, 40 - (this.currentWave * 2));
-        if (playerObj) playerObj.hp = Math.min(playerObj.maxHP, playerObj.hp + 50);
     }
 }
 
@@ -318,6 +328,69 @@ class StructureManager {
     spawnStructure(structureDef) {
         this.isActive = true;
         this.currentBlocks = structureDef.blocks;
+
+        // Reposition any player or enemy that overlaps the newly spawned structure.
+        const entities = [];
+        if (playerObj) entities.push(playerObj);
+        if (enemiesObj) entities.push(...enemiesObj.components);
+
+        for (const entity of entities) {
+            const overlapsStructure = this.currentBlocks.some(
+                block => isColliding(entity, block)
+            );
+
+            if (!overlapsStructure) continue;
+
+            const originalX = entity.x;
+            const originalY = entity.y;
+            const maxX = gameArea.canvas.width - entity.width;
+            const maxY = gameArea.canvas.height - entity.height;
+            const maxRadius = Math.max(gameArea.canvas.width, gameArea.canvas.height);
+            let freePosition = null;
+
+            // Search outward from the entity for a nearby position clear of every block.
+            for (let radius = 5; radius <= maxRadius && !freePosition; radius += 5) {
+                const candidates = [];
+
+                for (let offset = -radius; offset <= radius; offset += 5) {
+                    candidates.push({ x: originalX + offset, y: originalY - radius });
+                    candidates.push({ x: originalX + offset, y: originalY + radius });
+
+                    if (offset !== -radius && offset !== radius) {
+                        candidates.push({ x: originalX - radius, y: originalY + offset });
+                        candidates.push({ x: originalX + radius, y: originalY + offset });
+                    }
+                }
+
+                for (const candidate of candidates) {
+                    if (candidate.x < 0 || candidate.y < 0 ||
+                        candidate.x > maxX || candidate.y > maxY) {
+                        continue;
+                    }
+
+                    const candidateBox = {
+                        x: candidate.x,
+                        y: candidate.y,
+                        width: entity.width,
+                        height: entity.height
+                    };
+
+                    const blocked = this.currentBlocks.some(
+                        block => isColliding(candidateBox, block)
+                    );
+
+                    if (!blocked) {
+                        freePosition = candidate;
+                        break;
+                    }
+                }
+            }
+
+            if (freePosition) {
+                entity.x = freePosition.x;
+                entity.y = freePosition.y;
+            }
+        }
     }
 
     // ------ Draw Structure ------
@@ -448,6 +521,7 @@ function startGame() {
         enemiesObj = new Enemies();
         bulletsObj = new Bullets();
         waveManager = new WaveManager();
+        structureManager = new StructureManager(); // Clear any structure left from a previous run
         waveSnailDamage = 0;
         gameDuration = 0;
 
@@ -462,8 +536,6 @@ function startGame() {
     document.getElementById("main-menu-overlay").classList.add("hidden");
     document.getElementById("pause-menu-overlay").classList.add("hidden");
     document.getElementById("game-over-menu-overlay").classList.add("hidden");
-
-    structureManager.spawnStructure(structures[0]); // Spawn structure for testing
 }
 
 // ========= RESUME GAME =========
@@ -512,6 +584,7 @@ const gameArea = {
     setup: function() {
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
+
         this.context = this.canvas.getContext("2d");
 
         lastTimestamp = performance.now();
