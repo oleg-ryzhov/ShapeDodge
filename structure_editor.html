@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ShapeDodge Structure Builder</title>
+<style>
+:root{--bg:#eceff3;--panel:#fff;--text:#1b1f24;--muted:#677081;--line:#d3d9e0;--stage:#dfe4ea;--arena:#f9fbfd;--grid:#e1e6ec;--block:#7d8794;--accent:#1f6feb;--btn:#f3f5f8;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12151a;--panel:#1a1e25;--text:#e6e9ee;--muted:#8b94a3;--line:#2c333d;--stage:#0e1115;--arena:#1b2027;--grid:#252b34;--block:#8a94a3;--accent:#4c9aff;--btn:#232933;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12151a;--panel:#1a1e25;--text:#e6e9ee;--muted:#8b94a3;--line:#2c333d;--stage:#0e1115;--arena:#1b2027;--grid:#252b34;--block:#8a94a3;--accent:#4c9aff;--btn:#232933;color-scheme:dark}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{height:100%;margin:0;display:flex;background:var(--bg);color:var(--text);font:13px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+#stage{flex:1;min-width:0;position:relative;background:var(--stage)}
+canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
+#pos{position:absolute;left:10px;bottom:8px;font:11px ui-monospace,Consolas,monospace;color:var(--muted);pointer-events:none}
+#side{width:276px;flex:none;background:var(--panel);border-left:1px solid var(--line);overflow:auto;padding:12px;display:flex;flex-direction:column;gap:14px}
+@media (max-width:760px){body{flex-direction:column}#side{width:auto;height:46%;border-left:0;border-top:1px solid var(--line);order:2}}
+h1{font-size:15px;margin:0}
+h4{margin:0 0 6px;font-size:12px;font-weight:600;color:var(--muted)}
+button,input,select{font:inherit;color:var(--text);background:var(--btn);border:1px solid var(--line);border-radius:5px;padding:5px 8px}
+button{cursor:pointer}
+button:hover{border-color:var(--accent)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+button.pri{background:var(--accent);border-color:var(--accent);color:#fff;padding:9px;font-weight:600}
+button:disabled,input:disabled{opacity:.45;cursor:default}
+input[type=number]{width:100%;min-width:0;box-sizing:border-box;font-family:ui-monospace,Consolas,monospace}
+.row{display:flex;gap:6px;align-items:center}
+.row>*{flex:1;min-width:0}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+label.f{display:flex;flex-direction:column;gap:2px;color:var(--muted);font-size:11px}
+.muted{color:var(--muted);font-size:12px}
+.keys{margin:0;padding-left:16px;color:var(--muted);font-size:12px}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
+#modal[hidden]{display:none}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;width:min(580px,100%);display:flex;flex-direction:column;gap:10px}
+textarea{width:100%;height:300px;box-sizing:border-box;font:12px ui-monospace,Consolas,monospace;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:5px;padding:8px;resize:vertical}
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="cv"></canvas><div id="pos"></div></div>
+<aside id="side">
+  <h1>Structure builder</h1>
+  <div class="g2">
+    <button id="mDraw" title="Draw (D)">Draw blocks</button>
+    <button id="mSel" title="Select (V)">Select / move</button>
+  </div>
+  <div>
+    <h4>Arena (px)</h4>
+    <div class="g3">
+      <label class="f">Width<input id="aw" type="number" min="100" max="10000"></label>
+      <label class="f">Height<input id="ah" type="number" min="100" max="10000"></label>
+      <label class="f">Snap<input id="grid" type="number" min="0" max="200"></label>
+    </div>
+    <label class="row" style="margin-top:8px"><input id="lab" type="checkbox" style="flex:none"> Show all labels</label>
+  </div>
+  <div>
+    <h4 id="selinfo">Nothing selected</h4>
+    <div class="g2">
+      <label class="f">X (left)<input id="sx" type="number"></label>
+      <label class="f">Y (top)<input id="sy" type="number"></label>
+      <label class="f">Width<input id="sw" type="number"></label>
+      <label class="f">Height<input id="sh" type="number"></label>
+    </div>
+    <div class="g3" style="margin-top:8px">
+      <button id="bCopy">Copy</button><button id="bPaste">Paste</button><button id="bDup">Duplicate</button>
+      <button id="bDel">Delete</button><button id="bUndo">Undo</button><button id="bRedo">Redo</button>
+    </div>
+  </div>
+  <div>
+    <h4>Enemies that spawn with it</h4>
+    <div id="enemies" style="display:flex;flex-direction:column;gap:6px"></div>
+    <button id="addEn" style="margin-top:6px;width:100%">Add enemy</button>
+  </div>
+  <button id="save" class="pri">Save</button>
+  <ul class="keys">
+    <li>D draw, V select, Shift+click adds to selection</li>
+    <li>Drag empty space in Select mode to box-select</li>
+    <li>Ctrl+C / V / D copy, paste, duplicate</li>
+    <li>Ctrl+A all, Ctrl+Z undo, Del delete</li>
+    <li>Arrows nudge 1 px, Shift+arrows 10 px</li>
+  </ul>
+</aside>
+<div id="modal" hidden>
+  <div class="card">
+    <h1>Structure ready to paste</h1>
+    <div class="muted">Add it to the <code>structures</code> array in ShapeDodge.</div>
+    <textarea id="out" readonly spellcheck="false"></textarea>
+    <div class="row"><button id="cpy" class="pri">Copy</button><button id="cls">Close</button></div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const cv=$('cv'),ctx=cv.getContext('2d');
+const TYPES=['gary','fast','tank','tiny'];
+let S={arenaW:1280,arenaH:720,grid:10,labels:true};
+let blocks=[],enemies=[],nextId=1,sel=new Set(),mode='draw';
+let undoS=[],redoS=[],clip=[],drag=null,mouse=null,lastPaste=null,C={};
+const view={s:1,ox:0,oy:0,w:0,h:0,dpr:1};
+
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const sn=v=>S.grid>0?Math.round(v/S.grid)*S.grid:Math.round(v);
+const selBlocks=()=>blocks.filter(b=>sel.has(b.id));
+const rectOf=(a,b)=>({x:Math.min(a.x,b.x),y:Math.min(a.y,b.y),w:Math.abs(a.x-b.x),h:Math.abs(a.y-b.y)});
+function bbox(l){let x1=1e9,y1=1e9,x2=-1e9,y2=-1e9;l.forEach(b=>{x1=Math.min(x1,b.x);y1=Math.min(y1,b.y);x2=Math.max(x2,b.x+b.w);y2=Math.max(y2,b.y+b.h);});return{x:x1,y:y1,w:x2-x1,h:y2-y1};}
+function moveBy(l,dx,dy){l.forEach(b=>{b.x+=dx;b.y+=dy;});}
+function toWorld(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left-view.ox)/view.s,y:(e.clientY-r.top-view.oy)/view.s};}
+function hit(p){for(let i=blocks.length-1;i>=0;i--){const b=blocks[i];if(p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h)return b;}return null;}
+
+/* ---------- persistence + undo ---------- */
+function persist(){try{localStorage.setItem('sdsb',JSON.stringify({S,blocks,enemies,nextId}));}catch(e){}}
+function restore(){try{const d=JSON.parse(localStorage.getItem('sdsb')||'null');if(d&&d.S){Object.assign(S,d.S);blocks=d.blocks||[];enemies=d.enemies||[];nextId=d.nextId||1;}}catch(e){}}
+const snap=()=>JSON.stringify({blocks,enemies});
+function pushUndo(){undoS.push(snap());if(undoS.length>100)undoS.shift();redoS=[];}
+function applySnap(j){const d=JSON.parse(j);blocks=d.blocks;enemies=d.enemies;sel=new Set([...sel].filter(id=>blocks.some(b=>b.id===id)));}
+function undo(){if(!undoS.length)return;redoS.push(snap());applySnap(undoS.pop());changed();}
+function redo(){if(!redoS.length)return;undoS.push(snap());applySnap(redoS.pop());changed();}
+function changed(){persist();syncSel();renderEnemies();draw();}
+
+/* ---------- drawing ---------- */
+function layout(){
+  const r=cv.getBoundingClientRect(),d=window.devicePixelRatio||1,pad=28;
+  view.w=r.width;view.h=r.height;view.dpr=d;
+  cv.width=Math.round(r.width*d);cv.height=Math.round(r.height*d);
+  view.s=Math.max(0.05,Math.min((r.width-pad*2)/S.arenaW,(r.height-pad*2)/S.arenaH,2));
+  view.ox=(r.width-S.arenaW*view.s)/2;view.oy=(r.height-S.arenaH*view.s)/2;
+  draw();
+}
+function lab(t,wx,wy,col){
+  const sx=view.ox+wx*view.s,sy=view.oy+wy*view.s;let ly=sy-4;if(ly<12)ly=sy+14;
+  ctx.font='11px ui-monospace,Consolas,monospace';ctx.textAlign='left';ctx.lineJoin='round';ctx.lineWidth=3;
+  ctx.strokeStyle=C.arena;ctx.strokeText(t,sx,ly);ctx.fillStyle=col;ctx.fillText(t,sx,ly);
+}
+function draw(){
+  const cs=getComputedStyle(document.documentElement),g=n=>cs.getPropertyValue(n).trim();
+  C={stage:g('--stage'),arena:g('--arena'),grid:g('--grid'),block:g('--block'),accent:g('--accent'),muted:g('--muted')};
+  const d=view.dpr;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,view.w,view.h);
+  ctx.save();ctx.translate(view.ox,view.oy);ctx.scale(view.s,view.s);
+  ctx.fillStyle=C.arena;ctx.fillRect(0,0,S.arenaW,S.arenaH);
+  if(S.grid>0&&S.grid*view.s>=6){
+    ctx.strokeStyle=C.grid;ctx.lineWidth=1/view.s;ctx.beginPath();
+    for(let x=0;x<=S.arenaW;x+=S.grid){ctx.moveTo(x,0);ctx.lineTo(x,S.arenaH);}
+    for(let y=0;y<=S.arenaH;y+=S.grid){ctx.moveTo(0,y);ctx.lineTo(S.arenaW,y);}
+    ctx.stroke();
+  }
+  ctx.strokeStyle=C.muted;ctx.lineWidth=2/view.s;ctx.strokeRect(0,0,S.arenaW,S.arenaH);
+  ctx.fillStyle=C.block;blocks.forEach(b=>ctx.fillRect(b.x,b.y,b.w,b.h));
+  ctx.strokeStyle=C.accent;ctx.lineWidth=2/view.s;ctx.fillStyle=C.accent;
+  selBlocks().forEach(b=>{ctx.strokeRect(b.x,b.y,b.w,b.h);const k=5/view.s;ctx.fillRect(b.x-k/2,b.y-k/2,k,k);});
+  if(drag&&drag.type==='create'){const r=drag.rect;ctx.globalAlpha=.35;ctx.fillRect(r.x,r.y,r.w,r.h);ctx.globalAlpha=1;ctx.strokeRect(r.x,r.y,r.w,r.h);}
+  if(drag&&drag.type==='marquee'){const r=rectOf(drag.start,drag.cur);ctx.setLineDash([6/view.s,4/view.s]);ctx.lineWidth=1.5/view.s;ctx.strokeRect(r.x,r.y,r.w,r.h);ctx.setLineDash([]);}
+  ctx.restore();
+  blocks.forEach(b=>{const s=sel.has(b.id);if(S.labels||s)lab(`${b.x}, ${b.y}  ${b.w}×${b.h}`,b.x,b.y,s?C.accent:C.muted);});
+  if(drag&&drag.type==='create'&&drag.rect.w+drag.rect.h>0){const r=drag.rect;lab(`${r.x}, ${r.y}  ${r.w}×${r.h}`,r.x,r.y,C.accent);}
+}
+
+/* ---------- pointer input ---------- */
+cv.addEventListener('pointerdown',e=>{
+  if(e.button!==0)return;
+  if(document.activeElement)document.activeElement.blur();
+  cv.setPointerCapture(e.pointerId);
+  const p=toWorld(e);
+  if(mode==='draw'){
+    const q={x:clamp(sn(p.x),0,S.arenaW),y:clamp(sn(p.y),0,S.arenaH)};
+    drag={type:'create',start:q,rect:{x:q.x,y:q.y,w:0,h:0}};
+  }else{
+    const h=hit(p);
+    if(h){
+      if(e.shiftKey){sel.has(h.id)?sel.delete(h.id):sel.add(h.id);drag=null;syncSel();draw();return;}
+      if(!sel.has(h.id))sel=new Set([h.id]);
+      const l=selBlocks();
+      drag={type:'move',start:p,orig:l.map(b=>({b,x:b.x,y:b.y})),box:bbox(l),moved:false};
+    }else{
+      if(!e.shiftKey)sel=new Set();
+      drag={type:'marquee',start:p,cur:p,base:new Set(sel)};
+    }
+  }
+  syncSel();draw();
+});
+cv.addEventListener('pointermove',e=>{
+  const p=toWorld(e);mouse=p;
+  $('pos').textContent=`x ${Math.round(p.x)}  y ${Math.round(p.y)}`;
+  if(!drag){if(mode==='select')cv.style.cursor=hit(p)?'move':'default';return;}
+  if(drag.type==='create'){
+    const q={x:clamp(sn(p.x),0,S.arenaW),y:clamp(sn(p.y),0,S.arenaH)};
+    drag.rect=rectOf(drag.start,q);
+  }else if(drag.type==='move'){
+    const a=drag.orig[0],bx=drag.box;
+    let dx=sn(a.x+(p.x-drag.start.x))-a.x,dy=sn(a.y+(p.y-drag.start.y))-a.y;
+    dx=clamp(dx,-bx.x,S.arenaW-bx.x-bx.w);dy=clamp(dy,-bx.y,S.arenaH-bx.y-bx.h);
+    if((dx||dy)&&!drag.moved){pushUndo();drag.moved=true;}
+    drag.orig.forEach(o=>{o.b.x=o.x+dx;o.b.y=o.y+dy;});
+  }else{
+    drag.cur=p;const r=rectOf(drag.start,p);
+    const hits=blocks.filter(b=>b.x<r.x+r.w&&b.x+b.w>r.x&&b.y<r.y+r.h&&b.y+b.h>r.y).map(b=>b.id);
+    sel=new Set([...drag.base,...hits]);syncSel();
+  }
+  draw();
+});
+function endDrag(){
+  if(!drag)return;
+  if(drag.type==='create'){
+    const r=drag.rect;
+    if(r.w>=2&&r.h>=2){pushUndo();const b={id:nextId++,x:r.x,y:r.y,w:r.w,h:r.h};blocks.push(b);sel=new Set([b.id]);}
+  }
+  drag=null;changed();
+}
+cv.addEventListener('pointerup',endDrag);
+cv.addEventListener('pointercancel',endDrag);
+
+/* ---------- actions ---------- */
+function copy(){const l=selBlocks();if(!l.length)return;clip=l.map(b=>({x:b.x,y:b.y,w:b.w,h:b.h}));lastPaste=null;}
+function paste(offsetOnly){
+  if(!clip.length)return;
+  const bx=bbox(clip);let dx=20,dy=20;
+  if(!offsetOnly&&mouse&&mouse.x>=0&&mouse.x<=S.arenaW&&mouse.y>=0&&mouse.y<=S.arenaH){
+    dx=sn(mouse.x)-bx.x;dy=sn(mouse.y)-bx.y;
+    if(lastPaste&&lastPaste.x===bx.x+dx&&lastPaste.y===bx.y+dy){dx+=20;dy+=20;}
+  }
+  dx=clamp(dx,-bx.x,S.arenaW-bx.x-bx.w);dy=clamp(dy,-bx.y,S.arenaH-bx.y-bx.h);
+  lastPaste={x:bx.x+dx,y:bx.y+dy};
+  pushUndo();sel=new Set();
+  clip.forEach(c=>{const b={id:nextId++,x:c.x+dx,y:c.y+dy,w:c.w,h:c.h};blocks.push(b);sel.add(b.id);});
+  changed();
+}
+function del(){if(!sel.size)return;pushUndo();blocks=blocks.filter(b=>!sel.has(b.id));sel=new Set();changed();}
+function setMode(m){mode=m;$('mDraw').classList.toggle('on',m==='draw');$('mSel').classList.toggle('on',m==='select');cv.style.cursor=m==='draw'?'crosshair':'default';}
+$('mDraw').onclick=()=>setMode('draw');$('mSel').onclick=()=>setMode('select');
+$('bCopy').onclick=copy;$('bPaste').onclick=()=>paste();$('bDup').onclick=()=>{copy();paste(true);};
+$('bDel').onclick=del;$('bUndo').onclick=undo;$('bRedo').onclick=redo;
+
+/* ---------- side panel ---------- */
+function syncSel(){
+  const l=selBlocks(),one=l.length===1,bx=l.length?bbox(l):null;
+  $('selinfo').textContent=l.length?(one?'Selected block':l.length+' blocks selected'):'Nothing selected';
+  ['sx','sy','sw','sh'].forEach((id,i)=>{const el=$(id);el.disabled=!l.length||(!one&&i>1);el.value=bx?Math.round([bx.x,bx.y,bx.w,bx.h][i]):'';});
+}
+['sx','sy','sw','sh'].forEach((id,i)=>$(id).addEventListener('change',()=>{
+  const l=selBlocks();if(!l.length)return;
+  const v=Math.round(+$(id).value);if(!isFinite(v)){syncSel();return;}
+  pushUndo();
+  if(l.length===1){
+    const b=l[0];
+    if(i===0)b.x=clamp(v,0,S.arenaW-b.w);
+    if(i===1)b.y=clamp(v,0,S.arenaH-b.h);
+    if(i===2)b.w=clamp(v,1,S.arenaW-b.x);
+    if(i===3)b.h=clamp(v,1,S.arenaH-b.y);
+  }else{
+    const bx=bbox(l);
+    if(i===0)moveBy(l,clamp(v,0,S.arenaW-bx.w)-bx.x,0);
+    if(i===1)moveBy(l,0,clamp(v,0,S.arenaH-bx.h)-bx.y);
+  }
+  changed();
+}));
+function renderEnemies(){
+  const box=$('enemies');box.innerHTML='';
+  enemies.forEach((en,i)=>{
+    const r=document.createElement('div');r.className='row';
+    const s=document.createElement('select');TYPES.forEach(t=>s.add(new Option(t,t)));s.value=en.type;
+    s.onchange=()=>{pushUndo();en.type=s.value;persist();};
+    const n=document.createElement('input');n.type='number';n.min=1;n.value=en.amount;
+    n.onchange=()=>{pushUndo();en.amount=Math.max(1,Math.round(+n.value)||1);n.value=en.amount;persist();};
+    const x=document.createElement('button');x.textContent='Remove';x.onclick=()=>{pushUndo();enemies.splice(i,1);changed();};
+    r.append(s,n,x);box.append(r);
+  });
+}
+$('addEn').onclick=()=>{pushUndo();enemies.push({type:'gary',amount:1});changed();};
+$('aw').onchange=()=>{S.arenaW=clamp(Math.round(+$('aw').value)||1280,100,10000);$('aw').value=S.arenaW;persist();layout();};
+$('ah').onchange=()=>{S.arenaH=clamp(Math.round(+$('ah').value)||720,100,10000);$('ah').value=S.arenaH;persist();layout();};
+$('grid').onchange=()=>{S.grid=clamp(Math.round(+$('grid').value)||0,0,200);$('grid').value=S.grid;persist();draw();};
+$('lab').onchange=e=>{S.labels=e.target.checked;e.target.blur();persist();draw();};
+
+/* ---------- save popup ---------- */
+function build(){
+  const list=a=>a.length?a.join('\n')+'\n':'';
+  const bl=list(blocks.map(b=>`        { width: ${b.w}, height: ${b.h}, x: ${b.x}, y: ${b.y} },`));
+  const en=list(enemies.map(e=>`        { type: "${e.type}", amount: ${e.amount} },`));
+  return `// Built for a ${S.arenaW}x${S.arenaH} arena, x/y = top-left pixel\n{\n    blocks: [\n${bl}    ],\n    enemies: [\n${en}    ]\n},`;
+}
+function closeModal(){$('modal').hidden=true;}
+$('save').onclick=()=>{$('out').value=build();$('modal').hidden=false;$('out').focus();$('out').select();};
+$('cls').onclick=closeModal;
+$('modal').addEventListener('pointerdown',e=>{if(e.target===$('modal'))closeModal();});
+$('cpy').onclick=async()=>{
+  const t=$('out');t.select();let ok=false;
+  try{await navigator.clipboard.writeText(t.value);ok=true;}catch(e){try{ok=document.execCommand('copy');}catch(_){}}
+  $('cpy').textContent=ok?'Copied':'Press Ctrl+C';
+  setTimeout(()=>{$('cpy').textContent='Copy';},1500);
+};
+
+/* ---------- keyboard ---------- */
+document.addEventListener('keydown',e=>{
+  if(!$('modal').hidden){if(e.key==='Escape')closeModal();return;}
+  const t=e.target.tagName;if(t==='INPUT'||t==='TEXTAREA'||t==='SELECT')return;
+  const k=e.key.toLowerCase(),c=e.ctrlKey||e.metaKey;
+  if(c&&k==='c'){copy();e.preventDefault();}
+  else if(c&&k==='v'){paste();e.preventDefault();}
+  else if(c&&k==='d'){copy();paste(true);e.preventDefault();}
+  else if(c&&k==='a'){sel=new Set(blocks.map(b=>b.id));syncSel();draw();e.preventDefault();}
+  else if(c&&k==='z'){e.shiftKey?redo():undo();e.preventDefault();}
+  else if(c&&k==='y'){redo();e.preventDefault();}
+  else if(k==='delete'||k==='backspace'){del();e.preventDefault();}
+  else if(k==='escape'){sel=new Set();syncSel();draw();}
+  else if(!c&&k==='v')setMode('select');
+  else if(!c&&k==='d')setMode('draw');
+  else if(k.startsWith('arrow')&&sel.size){
+    const l=selBlocks(),bx=bbox(l),st=e.shiftKey?10:1;
+    let dx=((k==='arrowright')-(k==='arrowleft'))*st,dy=((k==='arrowdown')-(k==='arrowup'))*st;
+    dx=clamp(dx,-bx.x,S.arenaW-bx.x-bx.w);dy=clamp(dy,-bx.y,S.arenaH-bx.y-bx.h);
+    if(dx||dy){pushUndo();moveBy(l,dx,dy);changed();}
+    e.preventDefault();
+  }
+});
+
+/* ---------- init ---------- */
+restore();
+$('aw').value=S.arenaW;$('ah').value=S.arenaH;$('grid').value=S.grid;$('lab').checked=S.labels;
+setMode('draw');syncSel();renderEnemies();
+new ResizeObserver(layout).observe($('stage'));
+layout();
+</script>
+</body>
+</html>
