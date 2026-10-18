@@ -22,7 +22,7 @@ const tickLength = 20;        // 50 ticks per second
 let frameAccumulator = 0;     // Store leftover time after every tick
 let lastTimestamp = 0;        // Store time of previous frame
 
-/* ============================
+/* ============================	
           PLAYER CLASS
    ============================ */
 class Player {
@@ -130,17 +130,36 @@ class Enemies {
     }
 
     // ========= SPAWN ENEMY =========
-    spawnEnemy(type) {
-        // Randomize spawn location
-        const side = Math.random() < 0.5 ? 'left' : 'right'; // randomize side
-        let x = (side === 'left') ? -type.width : gameArea.canvas.width; // calculate x
-        let y = Math.random() * (gameArea.canvas.height - type.height); // calculate y
-
+    spawnEnemy(type, sides) {
+        // Pick a random side from the sides array
+        const side = sides[Math.floor(Math.random() * sides.length)];
+        
+        let x, y, dx, dy;
         const centerX = gameArea.canvas.width / 2;
         const centerY = gameArea.canvas.height / 2;
-        let dx = (side === 'left') ? 1 : -1;
 
-        let dy = (centerY - y) / (gameArea.canvas.height / 2);
+        // Calculate spawn position and direction based on side
+        if (side === 'left') {
+            x = -type.width;
+            y = Math.random() * (gameArea.canvas.height - type.height);
+            dx = 1;
+            dy = (centerY - y) / (gameArea.canvas.height / 2);
+        } else if (side === 'right') {
+            x = gameArea.canvas.width;
+            y = Math.random() * (gameArea.canvas.height - type.height);
+            dx = -1;
+            dy = (centerY - y) / (gameArea.canvas.height / 2);
+        } else if (side === 'top') {
+            x = Math.random() * (gameArea.canvas.width - type.width);
+            y = -type.height;
+            dx = (centerX - x) / (gameArea.canvas.width / 2);
+            dy = 1;
+        } else if (side === 'bottom') {
+            x = Math.random() * (gameArea.canvas.width - type.width);
+            y = gameArea.canvas.height;
+            dx = (centerX - x) / (gameArea.canvas.width / 2);
+            dy = -1;
+        }
 
         const enemy = {
             x, y,
@@ -181,6 +200,7 @@ class Enemies {
 
             // ------ NORMAL ENEMIES ------
             else {
+                // Move enemy and detect collisions with blocks
                 const collision = moveEntityWithObstacles(e, e.speedX, e.speedY); // get blockedX and blockedY values
 
                 // ==== Bounce off obstacles ====
@@ -223,25 +243,28 @@ class Enemies {
             ctx.fillStyle = e.color;
             ctx.fillRect(e.x, e.y, e.width, e.height);
 
+            // Draw health bar if enemy is damaged
             if (e.hp < e.maxHP) {
-                let barWidth = Math.max(64, e.width);
-                let barHeight = Math.max(8, e.height / 10);
+              let barWidth = Math.max(64, e.width);
+              let barHeight = Math.max(8, e.height / 10);
 
-                let barX = (e.x + e.width / 2) - (barWidth / 2);
-                let barY = e.y - barHeight - 5;
+              let barX = (e.x + e.width / 2) - (barWidth / 2);
+              let barY = e.y - barHeight - 5;
 
-                ctx.fillStyle = "black";
-                ctx.fillRect(barX, barY, barWidth, barHeight);
+              // Draw black outline
+              ctx.fillStyle = "black";
+              ctx.fillRect(barX, barY, barWidth, barHeight);
 
-                const outlineWeight = 1;
-                let fillerWidth = (e.hp / e.maxHP) * (barWidth - outlineWeight * 2)
-                let fillerHeight = barHeight - outlineWeight * 2;
+              // Draw red filler based on health percentage
+              const outlineWeight = 1;
+              let fillerWidth = (e.hp / e.maxHP) * (barWidth - outlineWeight * 2)
+              let fillerHeight = barHeight - outlineWeight * 2;
 
-                let fillerX = barX + outlineWeight;
-                let fillerY = barY + outlineWeight;
+              let fillerX = barX + outlineWeight;
+              let fillerY = barY + outlineWeight;
 
-                ctx.fillStyle = "red";
-                ctx.fillRect(fillerX, fillerY, fillerWidth, fillerHeight);
+              ctx.fillStyle = "red";
+              ctx.fillRect(fillerX, fillerY, fillerWidth, fillerHeight);
             }
         });
     }
@@ -266,21 +289,24 @@ class WaveManager {
         const activeEnemies = enemiesObj.components.filter(e => e.special !== 'one_hp').length;
         this.duration++;
 
+        // Check if wave should end and next wave should start
         if (this.spawnQueue.length === 0) {
             if (activeEnemies === 0 || /* this.duration >= this.maxDuration || */ waveSnailDamage >= maxSnailDamage) {
                 this.startNextWave();
             } else if (activeEnemies <= 2) {
+                // Small chance to start new wave if only a few enemies left
                 if (Math.floor(Math.random() * 100) == 1) {
                     this.startNextWave();
                 }
             }
         }
 
+        // Spawn enemies from queue at intervals
         if (this.spawnQueue.length > 0) {
             this.spawnTimer++;
             if (this.spawnTimer >= this.spawnInterval) {
-                let nextType = this.spawnQueue.shift();
-                enemiesObj.spawnEnemy(nextType);
+                let next = this.spawnQueue.shift();
+                enemiesObj.spawnEnemy(next.type, next.sides);
                 this.spawnTimer = 0;
             }
         }
@@ -294,24 +320,41 @@ class WaveManager {
             let budget = this.baseBudget + (this.currentWave * 20);
             this.duration = 0;
 
+            // Pick 2 random sides for this wave's spawns
+            const allSides = ['left', 'right', 'top', 'bottom'];
+            const waveSides = this.pickTwoRandom(allSides);
+
+            // Spawn snail on wave 1 (the special enemy)
             if (this.currentWave === 1) {
-                enemiesObj.spawnEnemy(enemiesObj.types.snail);
+                enemiesObj.spawnEnemy(enemiesObj.types.snail, waveSides);
             }
 
+            // Build spawn queue with random enemies based on budget
             const enemyOptions = Object.values(enemiesObj.types).filter(t => t.cost < 500);
             while (budget >= 5) {
                 let possible = enemyOptions.filter(t => t.cost <= budget);
                 if (possible.length === 0) break;
                 let choice = possible[Math.floor(Math.random() * possible.length)];
-                this.spawnQueue.push(choice);
+                this.spawnQueue.push({type: choice, sides: waveSides});
                 budget -= choice.cost;
             }
 
+            // Speed up spawn rate as waves progress
             this.spawnInterval = Math.max(10, 40 - (this.currentWave * 2));
         } else { // spawn structure on wave 6
             structureManager.spawnStructure(structures[0]);
             if (playerObj) playerObj.hp = Math.min(playerObj.maxHP, playerObj.hp + 50);
         }
+    }
+
+    // ------ Pick 2 random sides ------
+    pickTwoRandom(arr) {
+        const copy = [...arr];
+        let i = Math.floor(Math.random() * copy.length);
+        [copy[0], copy[i]] = [copy[i], copy[0]];
+        i = Math.floor(Math.random() * (copy.length - 1)) + 1;
+        [copy[1], copy[i]] = [copy[i], copy[1]];
+        return [copy[0], copy[1]];
     }
 }
 
@@ -329,12 +372,13 @@ class StructureManager {
         this.isActive = true;
         this.currentBlocks = structureDef.blocks;
 
-        // Reposition any player or enemy that overlaps the newly spawned structure.
+        // Reposition player and enemies if they overlap structure blocks
         const entities = [];
         if (playerObj) entities.push(playerObj);
         if (enemiesObj) entities.push(...enemiesObj.components);
 
         for (const entity of entities) {
+            // Check if entity overlaps any block
             const overlapsStructure = this.currentBlocks.some(
                 block => isColliding(entity, block)
             );
@@ -348,10 +392,11 @@ class StructureManager {
             const maxRadius = Math.max(gameArea.canvas.width, gameArea.canvas.height);
             let freePosition = null;
 
-            // Search outward from the entity for a nearby position clear of every block.
+            // Search in expanding circles for a free position
             for (let radius = 5; radius <= maxRadius && !freePosition; radius += 5) {
                 const candidates = [];
 
+                // Generate candidate positions at this radius
                 for (let offset = -radius; offset <= radius; offset += 5) {
                     candidates.push({ x: originalX + offset, y: originalY - radius });
                     candidates.push({ x: originalX + offset, y: originalY + radius });
@@ -362,6 +407,7 @@ class StructureManager {
                     }
                 }
 
+                // Test each candidate for collision
                 for (const candidate of candidates) {
                     if (candidate.x < 0 || candidate.y < 0 ||
                         candidate.x > maxX || candidate.y > maxY) {
@@ -375,6 +421,7 @@ class StructureManager {
                         height: entity.height
                     };
 
+                    // If no blocks overlap this candidate, use it
                     const blocked = this.currentBlocks.some(
                         block => isColliding(candidateBox, block)
                     );
@@ -386,6 +433,7 @@ class StructureManager {
                 }
             }
 
+            // Move entity to the free position if found
             if (freePosition) {
                 entity.x = freePosition.x;
                 entity.y = freePosition.y;
@@ -438,7 +486,7 @@ class Bullets {
             b.x += b.speedX;
             b.y += b.speedY;
 
-            // Calculate the bullet hitbox, accounting for its horizontal or vertical orientation
+            // Create bullet hitbox accounting for rotation
             const horizontal = b.speedX !== 0;
             const bulletBox = {
                 x: b.x - (horizontal ? b.width : b.height) / 2,
@@ -447,7 +495,7 @@ class Bullets {
                 height: horizontal ? b.height : b.width
             };
 
-            // Remove the bullet if it collides with an obstacle
+            // Check collision with structure blocks
             let hitObstacle = false;
             for (const block of structureManager.currentBlocks) {
                 if (isColliding(bulletBox, block)) {
@@ -457,10 +505,10 @@ class Bullets {
                 }
             }
 
-            // Skip the rest of this iteration if the bullet was removed
+            // Skip rest of update if bullet was removed
             if (hitObstacle) continue;
 
-            // Stop tracking bullets outside canvas
+            // Remove bullets outside canvas
             if (b.x < -50 || b.x > gameArea.canvas.width + 50 ||
                 b.y < -50 || b.y > gameArea.canvas.height + 50) {
                 this.components.splice(i, 1);
@@ -634,11 +682,11 @@ function moveEntityWithObstacles(entity, dx, dy) {
     let blockedX = false;
     let blockedY = false;
 
-    // Attempt horizontal movement
+    // Move horizontally and check for block collision
     entity.x += dx;
     for (const block of structureManager.currentBlocks) {
         if (isColliding(entity, block)) {
-            // Snap to the obstacle's edge
+            // Snap to block edge based on direction
             if (dx > 0) {
                 entity.x = block.x - entity.width;
             } else if (dx < 0) {
@@ -649,11 +697,11 @@ function moveEntityWithObstacles(entity, dx, dy) {
         }
     }
 
-    // Attempt vertical movement
+    // Move vertically and check for block collision
     entity.y += dy;
     for (const block of structureManager.currentBlocks) {
         if (isColliding(entity, block)) {
-            // Snap to the obstacle's edge
+            // Snap to block edge based on direction
             if (dy > 0) {
                 entity.y = block.y - entity.height;
             } else if (dy < 0) {
@@ -672,9 +720,11 @@ function moveEntityWithObstacles(entity, dx, dy) {
         PROCESS ALL COLLISIONS
    =============================== */
 function checkCollisions() {
+    // Check player collisions with enemies
     for (let i = enemiesObj.components.length - 1; i >= 0; i--) {
         const enemy = enemiesObj.components[i];
 
+        // Handle player + enemy collision
         if (isColliding(playerObj, enemy)) {
             if (enemy.special === "one_hp" && playerObj.hp != 1) {
                 playerObj.hp = 1;
@@ -684,6 +734,7 @@ function checkCollisions() {
             }
         }
 
+        // Handle bullet + enemy collision
         for (let j = bulletsObj.components.length - 1; j >= 0; j--) {
             const bullet = bulletsObj.components[j];
             const bBox = { x: bullet.x - 5, y: bullet.y - 5, width: 10, height: 10 };
@@ -692,9 +743,11 @@ function checkCollisions() {
                 enemy.hp -= bullet.damage;
                 bulletsObj.components.splice(j, 1);
 
+                // Track damage to snail for wave spawning
                 if (enemy.special === "one_hp") {
                     waveSnailDamage += bullet.damage;
                 }
+                // Remove enemy if dead
                 if (enemy.hp <= 0) {
                     enemiesObj.components.splice(i, 1);
                 }
