@@ -94,7 +94,7 @@ textarea{width:100%;height:300px;box-sizing:border-box;font:12px ui-monospace,Co
 const $=id=>document.getElementById(id);
 const cv=$('cv'),ctx=cv.getContext('2d');
 const TYPES=['gary','fast','tank','tiny'];
-let S={arenaW:1280,arenaH:720,grid:10,labels:true};
+let S={arenaW:1920,arenaH:1080,grid:10,labels:true};
 let blocks=[],enemies=[],nextId=1,sel=new Set(),mode='draw';
 let undoS=[],redoS=[],clip=[],drag=null,mouse=null,lastPaste=null,C={};
 const view={s:1,ox:0,oy:0,w:0,h:0,dpr:1};
@@ -266,8 +266,8 @@ function renderEnemies(){
   });
 }
 $('addEn').onclick=()=>{pushUndo();enemies.push({type:'gary',amount:1});changed();};
-$('aw').onchange=()=>{S.arenaW=clamp(Math.round(+$('aw').value)||1280,100,10000);$('aw').value=S.arenaW;persist();layout();};
-$('ah').onchange=()=>{S.arenaH=clamp(Math.round(+$('ah').value)||720,100,10000);$('ah').value=S.arenaH;persist();layout();};
+$('aw').onchange=()=>{S.arenaW=clamp(Math.round(+$('aw').value)||1920,100,10000);$('aw').value=S.arenaW;persist();layout();};
+$('ah').onchange=()=>{S.arenaH=clamp(Math.round(+$('ah').value)||1080,100,10000);$('ah').value=S.arenaH;persist();layout();};
 $('grid').onchange=()=>{S.grid=clamp(Math.round(+$('grid').value)||0,0,200);$('grid').value=S.grid;persist();draw();};
 $('lab').onchange=e=>{S.labels=e.target.checked;e.target.blur();persist();draw();};
 
