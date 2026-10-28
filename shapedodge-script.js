@@ -1,5 +1,5 @@
 
- // ========= STRUCTURES =========
+// ========= STRUCTURES =========
 const structures = [
     {
         wave: 3,
@@ -173,11 +173,11 @@ class Player {
 class Enemies {
     constructor() {
         this.types = {
-            gary:  { width:80, height:80, speed:5, maxHP:25, hp:25, damage:35, color:"blue", cost:15, is_boss:false, special:null, track_player:false },
-            fast:  { width:50, height:50, speed:8, maxHP:10, hp:10, damage:15, color:"yellow", cost:10, is_boss:false, special:null, track_player:false },
-            tank:  { width:150, height:150, speed:3, maxHP:100, hp:100, damage:60, color:"purple", cost:50, is_boss:false, special:null, track_player:false },
-            tiny:  { width:25, height:25, speed:4, maxHP:5, hp:5, damage:10, color:"lime", cost:5, is_boss:false, special:null, track_player:false },
-            snail: { width:15, height:15, speed:1.5, maxHP:1000, hp:1000, damage:1, color:"black", cost:250, is_boss:true, special:"one_hp", track_player:true }
+            gary:  { width:80,  height:80,  speed:5,   maxHP:25,   hp:25,   damage:35, color:"blue",   cost:15,  is_boss:false, special:null,     track_player:false },
+            fast:  { width:50,  height:50,  speed:8,   maxHP:10,   hp:10,   damage:15, color:"yellow", cost:10,  is_boss:false, special:null,     track_player:false },
+            tank:  { width:150, height:150, speed:3,   maxHP:100,  hp:100,  damage:60, color:"purple", cost:50,  is_boss:false, special:null,     track_player:false },
+            tiny:  { width:25,  height:25,  speed:4,   maxHP:5,    hp:5,    damage:10, color:"lime",   cost:5,   is_boss:false, special:null,     track_player:false },
+            snail: { width:15,  height:15,  speed:1.5, maxHP:1000, hp:1000, damage:1,  color:"black",  cost:250, is_boss:true,  special:"one_hp", track_player:true  }
         };
         this.components = [];
     }
@@ -356,15 +356,17 @@ class WaveManager {
         const structureTrigger = structures.find(s => s.wave === this.currentWave);
 
         if (structureTrigger) {
-            // Structure waves replace the normal wave and begin with a warning countdown.
-            enemiesObj.components = [];
+            // Structure waves remove normal enemies but preserve every existing boss.
+            enemiesObj.components = enemiesObj.components.filter(e => e.is_boss);
             this.spawnQueue = [];
             this.waveSides = null;
 
             structureManager.startStructureCountdown(structureTrigger);
 
-            // Preserve the snail and health-bonus behavior of structure waves.
-            enemiesObj.spawnEnemy(enemiesObj.types.snail, ["left", "right"]);
+            // Only spawn a new snail if no boss is already present.
+            if (!enemiesObj.components.some(e => e.is_boss)) {
+                enemiesObj.spawnEnemy(enemiesObj.types.snail, ["left", "right"]);
+            }
 
             if (playerObj) {
                 playerObj.hp = Math.min(playerObj.maxHP, playerObj.hp + 50);
@@ -628,6 +630,7 @@ class StructureManager {
                         color: type.color,
                         cost: type.cost,
                         special: type.special,
+                        is_boss: type.is_boss,
                         track_player: type.track_player
                     });
 
