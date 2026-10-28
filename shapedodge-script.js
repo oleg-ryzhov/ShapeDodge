@@ -2,7 +2,7 @@
 // ========= STRUCTURES =========
 const structures = [
     {
-        wave: 3,
+        wave: 5,
         blocks: [
             { width: 150, height: 120, x: 120, y: 120 },
             { width: 150, height: 120, x: 530, y: 120 },
@@ -18,48 +18,49 @@ const structures = [
         ]
     },
     {
-        wave: 6,
+        wave: 10,
         blocks: [
-            { width: 100, height: 100, x: 50, y: 50 },
-            { width: 100, height: 100, x: 150, y: 50 },
-            { width: 100, height: 100, x: 50, y: 150 },
-            { width: 100, height: 100, x: 150, y: 150 },
-            { width: 200, height: 20, x: 50, y: 250 },
+            { width: 580, height: 20, x: 1220, y: 35 },
+            { width: 20, height: 105, x: 1220, y: 55 },
+            { width: 20, height: 220, x: 1220, y: 260 },
+            { width: 20, height: 100, x: 1340, y: 260 },
+            { width: 20, height: 220, x: 1460, y: 260 },
+            { width: 20, height: 220, x: 1580, y: 260 },
+            { width: 320, height: 20, x: 1600, y: 460 },
+            { width: 100, height: 20, x: 1240, y: 260 },
+            { width: 120, height: 20, x: 1340, y: 460 },
+            { width: 20, height: 200, x: 1760, y: 140 },
+            { width: 430, height: 20, x: 1330, y: 140 },
+            { width: 140, height: 20, x: 1780, y: 320 },
         ],
         enemies: [
-            { type: "fast", amount: 3 },
-            { type: "tiny", amount: 2 },
+            { type: "gary", amount: 3 },
+            { type: "fast", amount: 5 },
+            { type: "tiny", amount: 5 },
         ]
     },
     {
-        wave: 9,
+        wave: 20
         blocks: [
-            { width: 120, height: 120, x: 40, y: 40 },
-            { width: 120, height: 80, x: 170, y: 60 },
-            { width: 80, height: 120, x: 100, y: 170 },
-            { width: 150, height: 20, x: 40, y: 300 },
-            { width: 20, height: 150, x: 190, y: 170 },
+            { width: 40, height: 240, x: 1400, y: 500 },
+            { width: 920, height: 40, x: 520, y: 460 },
+            { width: 40, height: 240, x: 1400, y: 840 },
+            { width: 40, height: 240, x: 520, y: 500 },
+            { width: 40, height: 240, x: 520, y: 840 },
+            { width: 320, height: 60, x: 820, y: 760 },
+            { width: 60, height: 60, x: 590, y: 530 },
+            { width: 60, height: 60, x: 1310, y: 530 },
+            { width: 60, height: 60, x: 1310, y: 990 },
+            { width: 60, height: 60, x: 590, y: 990 },
+            { width: 60, height: 90, x: 950, y: 500 },
+            { width: 60, height: 90, x: 950, y: 990 },
         ],
         enemies: [
-            { type: "tank", amount: 1 },
-            { type: "gary", amount: 2 },
-            { type: "tiny", amount: 3 },
-        ]
-    },
-    {
-        wave: 12,
-        blocks: [
-            { width: 130, height: 130, x: 30, y: 30 },
-            { width: 130, height: 130, x: 180, y: 30 },
-            { width: 260, height: 20, x: 30, y: 170 },
-            { width: 20, height: 150, x: 90, y: 190 },
-            { width: 20, height: 150, x: 220, y: 190 },
-        ],
-        enemies: [
-            { type: "tank", amount: 1 },
-            { type: "fast", amount: 2 },
-            { type: "gary", amount: 2 },
-            { type: "tiny", amount: 2 },
+            { type: "gary", amount: 4 },
+            { type: "tank", amount: 2 },
+            { type: "temu_snail", amount: 3 },
+            { type: "fast", amount: 6 },
+            { type: "tiny", amount: 6 },
         ]
     },
 ];
@@ -177,7 +178,8 @@ class Enemies {
             fast:  { width:50,  height:50,  speed:8,   maxHP:10,   hp:10,   damage:15, color:"yellow", cost:10,  is_boss:false, special:null,     track_player:false },
             tank:  { width:150, height:150, speed:3,   maxHP:100,  hp:100,  damage:60, color:"purple", cost:50,  is_boss:false, special:null,     track_player:false },
             tiny:  { width:25,  height:25,  speed:4,   maxHP:5,    hp:5,    damage:10, color:"lime",   cost:5,   is_boss:false, special:null,     track_player:false },
-            snail: { width:15,  height:15,  speed:1.5, maxHP:1000, hp:1000, damage:1,  color:"black",  cost:250, is_boss:true,  special:"one_hp", track_player:true  }
+            snail: { width:15,  height:15,  speed:1.5, maxHP:1000, hp:1000, damage:1,  color:"black",  cost:250, is_boss:true,  special:"one_hp", track_player:true  },
+            temu_snail: { width:15,  height:15,  speed:1.5, maxHP:200, hp:200, damage:1,  color:"black",  cost:150, is_boss:false,  special:"one_hp", track_player:true }
         };
         this.components = [];
     }
