@@ -40,7 +40,7 @@ const structures = [
         ]
     },
     {
-        wave: 20
+        wave: 20,
         blocks: [
             { width: 40, height: 240, x: 1400, y: 500 },
             { width: 920, height: 40, x: 520, y: 460 },
