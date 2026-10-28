@@ -1,19 +1,66 @@
+
 // ========= STRUCTURES =========
 const structures = [
     {
-    blocks: [
-        { width: 150, height: 120, x: 120, y: 120 },
-        { width: 150, height: 120, x: 530, y: 120 },
-        { width: 150, height: 120, x: 530, y: 470 },
-        { width: 150, height: 120, x: 120, y: 470 },
-        { width: 260, height: 20, x: 270, y: 120 },
-        { width: 30, height: 470, x: 850, y: 120 },
-    ],
-    enemies: [
-        { type: "gary", amount: 1 },
-        { type: "fast", amount: 1 },
-        { type: "tiny", amount: 1 },
-    ]
+        wave: 3,
+        blocks: [
+            { width: 150, height: 120, x: 120, y: 120 },
+            { width: 150, height: 120, x: 530, y: 120 },
+            { width: 150, height: 120, x: 530, y: 470 },
+            { width: 150, height: 120, x: 120, y: 470 },
+            { width: 260, height: 20, x: 270, y: 120 },
+            { width: 30, height: 470, x: 850, y: 120 },
+        ],
+        enemies: [
+            { type: "gary", amount: 2 },
+            { type: "fast", amount: 1 },
+            { type: "tiny", amount: 2 },
+        ]
+    },
+    {
+        wave: 6,
+        blocks: [
+            { width: 100, height: 100, x: 50, y: 50 },
+            { width: 100, height: 100, x: 150, y: 50 },
+            { width: 100, height: 100, x: 50, y: 150 },
+            { width: 100, height: 100, x: 150, y: 150 },
+            { width: 200, height: 20, x: 50, y: 250 },
+        ],
+        enemies: [
+            { type: "fast", amount: 3 },
+            { type: "tiny", amount: 2 },
+        ]
+    },
+    {
+        wave: 9,
+        blocks: [
+            { width: 120, height: 120, x: 40, y: 40 },
+            { width: 120, height: 80, x: 170, y: 60 },
+            { width: 80, height: 120, x: 100, y: 170 },
+            { width: 150, height: 20, x: 40, y: 300 },
+            { width: 20, height: 150, x: 190, y: 170 },
+        ],
+        enemies: [
+            { type: "tank", amount: 1 },
+            { type: "gary", amount: 2 },
+            { type: "tiny", amount: 3 },
+        ]
+    },
+    {
+        wave: 12,
+        blocks: [
+            { width: 130, height: 130, x: 30, y: 30 },
+            { width: 130, height: 130, x: 180, y: 30 },
+            { width: 260, height: 20, x: 30, y: 170 },
+            { width: 20, height: 150, x: 90, y: 190 },
+            { width: 20, height: 150, x: 220, y: 190 },
+        ],
+        enemies: [
+            { type: "tank", amount: 1 },
+            { type: "fast", amount: 2 },
+            { type: "gary", amount: 2 },
+            { type: "tiny", amount: 2 },
+        ]
     },
 ];
 
@@ -22,7 +69,7 @@ const tickLength = 20;        // 50 ticks per second
 let frameAccumulator = 0;     // Store leftover time after every tick
 let lastTimestamp = 0;        // Store time of previous frame
 
-/* ============================	
+/* ============================
           PLAYER CLASS
    ============================ */
 class Player {
@@ -51,8 +98,9 @@ class Player {
     update() {
         moveEntityWithObstacles(this, this.speedX, this.speedY);
 
-        this.x = Math.max(0, Math.min(this.x, gameArea.canvas.width - this.width));
-        this.y = Math.max(0, Math.min(this.y, gameArea.canvas.height - this.height));
+        // Clamp to world bounds (not screen, since world is fixed)
+        this.x = Math.max(0, Math.min(this.x, gameArea.width - this.width));
+        this.y = Math.max(0, Math.min(this.y, gameArea.height - this.height));
 
         this.damageTickCounter++;
         this.shotTickCounter++;
@@ -67,8 +115,8 @@ class Player {
 
         const barWidth = 600;
         const barHeight = 30;
-        const barX = (gameArea.canvas.width - barWidth) / 2;
-        const barY = gameArea.canvas.height - barHeight - 10;
+        const barX = (gameArea.width - barWidth) / 2;
+        const barY = gameArea.height - barHeight - 10;
 
         ctx.fillStyle = "black";
         ctx.fillRect(barX, barY, barWidth, barHeight);
@@ -120,11 +168,11 @@ class Player {
 class Enemies {
     constructor() {
         this.types = {
-            gary:  { width:80,  height:80,  speed:5,   maxHP:25,   hp:25,   damage:35, color:"blue",   cost:15,  special:null,     track_player:false },
-            fast:  { width:50,  height:50,  speed:8,   maxHP:10,   hp:10,   damage:15, color:"yellow", cost:10,  special:null,     track_player:false },
-            tank:  { width:150, height:150, speed:3,   maxHP:100,  hp:100,  damage:60, color:"purple", cost:50,  special:null,     track_player:false },
-            tiny:  { width:25,  height:25,  speed:4,   maxHP:5,    hp:5,    damage:10, color:"lime",   cost:5,   special:null,     track_player:false },
-            snail: { width:15,  height:15,  speed:1.5, maxHP:1000, hp:1000, damage:1,  color:"black",  cost:250, special:'one_hp', track_player:true  }
+            gary:  { width:80,  height:80,  speed:5,   maxHP:25,   hp:25,   damage:35, color:"blue",   cost:15,  is_boss: false, special:null,     track_player:false },
+            fast:  { width:50,  height:50,  speed:8,   maxHP:10,   hp:10,   damage:15, color:"yellow", cost:10,  is_boss: false, special:null,     track_player:false },
+            tank:  { width:150, height:150, speed:3,   maxHP:100,  hp:100,  damage:60, color:"purple", cost:50,  is_boss: false, special:null,     track_player:false },
+            tiny:  { width:25,  height:25,  speed:4,   maxHP:5,    hp:5,    damage:10, color:"lime",   cost:5,   is_boss: false, special:null,     track_player:false },
+            snail: { width:15,  height:15,  speed:1.5, maxHP:1000, hp:1000, damage:1,  color:"black",  cost:250, is_boss: true,  special:'one_hp', track_player:true  }
         };
         this.components = [];
     }
@@ -133,31 +181,31 @@ class Enemies {
     spawnEnemy(type, sides) {
         // Pick a random side from the sides array
         const side = sides[Math.floor(Math.random() * sides.length)];
-        
+
         let x, y, dx, dy;
-        const centerX = gameArea.canvas.width / 2;
-        const centerY = gameArea.canvas.height / 2;
+        const centerX = gameArea.width / 2;
+        const centerY = gameArea.height / 2;
 
         // Calculate spawn position and direction based on side
         if (side === 'left') {
             x = -type.width;
-            y = Math.random() * (gameArea.canvas.height - type.height);
+            y = Math.random() * (gameArea.height - type.height);
             dx = 1;
-            dy = (centerY - y) / (gameArea.canvas.height / 2);
+            dy = (centerY - y) / (gameArea.height / 2);
         } else if (side === 'right') {
-            x = gameArea.canvas.width;
-            y = Math.random() * (gameArea.canvas.height - type.height);
+            x = gameArea.width;
+            y = Math.random() * (gameArea.height - type.height);
             dx = -1;
-            dy = (centerY - y) / (gameArea.canvas.height / 2);
+            dy = (centerY - y) / (gameArea.height / 2);
         } else if (side === 'top') {
-            x = Math.random() * (gameArea.canvas.width - type.width);
+            x = Math.random() * (gameArea.width - type.width);
             y = -type.height;
-            dx = (centerX - x) / (gameArea.canvas.width / 2);
+            dx = (centerX - x) / (gameArea.width / 2);
             dy = 1;
         } else if (side === 'bottom') {
-            x = Math.random() * (gameArea.canvas.width - type.width);
-            y = gameArea.canvas.height;
-            dx = (centerX - x) / (gameArea.canvas.width / 2);
+            x = Math.random() * (gameArea.width - type.width);
+            y = gameArea.height;
+            dx = (centerX - x) / (gameArea.height / 2);
             dy = -1;
         }
 
@@ -172,6 +220,7 @@ class Enemies {
             damage: type.damage,
             color: type.color, cost: type.cost,
             special: type.special,
+            is_boss: type.is_boss,
             track_player: type.track_player,
         };
         this.components.push(enemy);
@@ -211,15 +260,15 @@ class Enemies {
                     e.speedY *= -1; // invert speed
                 }
 
-                // ==== Bounce off the canvas boundaries ====
+                // ==== Bounce off the world boundaries ====
                 // LEFT BORDER
                 if (e.x <= 0 && e.speedX < 0) {
-                    e.x = 0; // keep enemy inside canvas
+                    e.x = 0; // keep enemy inside world
                     e.speedX = Math.abs(e.speedX); // make speed positive so that the enemy moves towards +x
                 }
                 // RIGHT BORDER
-                else if (e.x + e.width >= gameArea.canvas.width && e.speedX > 0) {
-                    e.x = gameArea.canvas.width - e.width;
+                else if (e.x + e.width >= gameArea.width && e.speedX > 0) {
+                    e.x = gameArea.width - e.width;
                     e.speedX = -Math.abs(e.speedX);
                 }
                 // TOP BORDER
@@ -228,8 +277,8 @@ class Enemies {
                     e.speedY = Math.abs(e.speedY);
                 }
                 // BOTTOM BORDER
-                else if (e.y + e.height >= gameArea.canvas.height && e.speedY > 0) {
-                    e.y = gameArea.canvas.height - e.height;
+                else if (e.y + e.height >= gameArea.height && e.speedY > 0) {
+                    e.y = gameArea.height - e.height;
                     e.speedY = -Math.abs(e.speedY);
                 }
             }
@@ -245,26 +294,26 @@ class Enemies {
 
             // Draw health bar if enemy is damaged
             if (e.hp < e.maxHP) {
-              let barWidth = Math.max(64, e.width);
-              let barHeight = Math.max(8, e.height / 10);
+                let barWidth = Math.max(64, e.width);
+                let barHeight = Math.max(8, e.height / 10);
 
-              let barX = (e.x + e.width / 2) - (barWidth / 2);
-              let barY = e.y - barHeight - 5;
+                let barX = (e.x + e.width / 2) - (barWidth / 2);
+                let barY = e.y - barHeight - 5;
 
-              // Draw black outline
-              ctx.fillStyle = "black";
-              ctx.fillRect(barX, barY, barWidth, barHeight);
+                // Draw black outline
+                ctx.fillStyle = "black";
+                ctx.fillRect(barX, barY, barWidth, barHeight);
 
-              // Draw red filler based on health percentage
-              const outlineWeight = 1;
-              let fillerWidth = (e.hp / e.maxHP) * (barWidth - outlineWeight * 2)
-              let fillerHeight = barHeight - outlineWeight * 2;
+                // Draw red filler based on health percentage
+                const outlineWeight = 1;
+                let fillerWidth = (e.hp / e.maxHP) * (barWidth - outlineWeight * 2)
+                let fillerHeight = barHeight - outlineWeight * 2;
 
-              let fillerX = barX + outlineWeight;
-              let fillerY = barY + outlineWeight;
+                let fillerX = barX + outlineWeight;
+                let fillerY = barY + outlineWeight;
 
-              ctx.fillStyle = "red";
-              ctx.fillRect(fillerX, fillerY, fillerWidth, fillerHeight);
+                ctx.fillStyle = "red";
+                ctx.fillRect(fillerX, fillerY, fillerWidth, fillerHeight);
             }
         });
     }
@@ -286,7 +335,13 @@ class WaveManager {
 
     // ========= UPDATE WAVES =========
     update() {
-        const activeEnemies = enemiesObj.components.filter(e => e.special !== 'one_hp').length;
+        // ------ If structure is active, let StructureManager handle wave end ------
+        if (structureManager.isActive) {
+            return; // Don't do normal wave logic during structure
+        }
+
+        // ------ NORMAL WAVE LOGIC ------
+        const activeEnemies = enemiesObj.components.filter(e => !e.is_boss).length;
         this.duration++;
 
         // Check if wave should end and next wave should start
@@ -315,18 +370,31 @@ class WaveManager {
     // ========= SPAWN WAVES =========
     startNextWave() {
         this.currentWave++;
-        if (this.currentWave != 3) { // spawn normal wave
-            waveSnailDamage = 0;
-            let budget = this.baseBudget + (this.currentWave * 20);
-            this.duration = 0;
+        waveSnailDamage = 0;
+        let budget = this.baseBudget + (this.currentWave * 20);
+        this.duration = 0;
 
-            // Pick 2 random sides for this wave's spawns
-            const allSides = ['left', 'right', 'top', 'bottom'];
-            const waveSides = this.pickTwoRandom(allSides);
+        // Check if a structure should spawn after this wave
+        const structureTrigger = structures.find(s => s.wave === this.currentWave);
 
+        if (structureTrigger) {
+            // ------ STRUCTURE WAVE ------
+            // Completely clear normal enemies and reset for structure
+            enemiesObj.components = [];
+            this.spawnQueue = [];
+
+            // Spawn structure with its own enemies
+            structureManager.spawnStructure(structureTrigger);
+
+            // Spawn snail at structure start
+            enemiesObj.spawnEnemy(enemiesObj.types.snail, ['left', 'right']);
+
+            if (playerObj) playerObj.hp = Math.min(playerObj.maxHP, playerObj.hp + 50);
+        } else {
+            // ------ NORMAL WAVE ------
             // Spawn snail on wave 1 (the special enemy)
             if (this.currentWave === 1) {
-                enemiesObj.spawnEnemy(enemiesObj.types.snail, waveSides);
+                enemiesObj.spawnEnemy(enemiesObj.types.snail, ['left', 'right', 'top', 'bottom']);
             }
 
             // Build spawn queue with random enemies based on budget
@@ -335,15 +403,17 @@ class WaveManager {
                 let possible = enemyOptions.filter(t => t.cost <= budget);
                 if (possible.length === 0) break;
                 let choice = possible[Math.floor(Math.random() * possible.length)];
-                this.spawnQueue.push({type: choice, sides: waveSides});
+
+                // Pick 2 random sides for this wave's spawns
+                const allSides = ['left', 'right', 'top', 'bottom'];
+                const waveSides = this.pickTwoRandom(allSides);
+
+                this.spawnQueue.push({ type: choice, sides: waveSides });
                 budget -= choice.cost;
             }
 
             // Speed up spawn rate as waves progress
             this.spawnInterval = Math.max(10, 40 - (this.currentWave * 2));
-        } else { // spawn structure on wave 6
-            structureManager.spawnStructure(structures[0]);
-            if (playerObj) playerObj.hp = Math.min(playerObj.maxHP, playerObj.hp + 50);
         }
     }
 
@@ -365,6 +435,7 @@ class StructureManager {
     constructor() {
         this.isActive = false;
         this.currentBlocks = []; // blocks currently on the arena
+        this.structureEnemyCount = 0; // track how many structure enemies are alive
     }
 
     // ------ Spawn Structure ------
@@ -372,10 +443,9 @@ class StructureManager {
         this.isActive = true;
         this.currentBlocks = structureDef.blocks;
 
-        // Reposition player and enemies if they overlap structure blocks
+        // Reposition player if they overlap structure blocks
         const entities = [];
         if (playerObj) entities.push(playerObj);
-        if (enemiesObj) entities.push(...enemiesObj.components);
 
         for (const entity of entities) {
             // Check if entity overlaps any block
@@ -387,9 +457,9 @@ class StructureManager {
 
             const originalX = entity.x;
             const originalY = entity.y;
-            const maxX = gameArea.canvas.width - entity.width;
-            const maxY = gameArea.canvas.height - entity.height;
-            const maxRadius = Math.max(gameArea.canvas.width, gameArea.canvas.height);
+            const maxX = gameArea.width - entity.width;
+            const maxY = gameArea.height - entity.height;
+            const maxRadius = Math.max(gameArea.width, gameArea.height);
             let freePosition = null;
 
             // Search in expanding circles for a free position
@@ -439,15 +509,112 @@ class StructureManager {
                 entity.y = freePosition.y;
             }
         }
+
+        // Spawn structure enemies after clearing overlaps
+        this.spawnStructureEnemies(structureDef);
+    }
+
+    // ------ Spawn Structure Enemies ------
+    spawnStructureEnemies(structureDef) {
+        // Calculate bounding box of all structure blocks
+        // This gives us the area where enemies can spawn inside the structure
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+        structureDef.blocks.forEach(block => {
+            minX = Math.min(minX, block.x);
+            minY = Math.min(minY, block.y);
+            maxX = Math.max(maxX, block.x + block.width);
+            maxY = Math.max(maxY, block.y + block.height);
+        });
+
+        // Reset structure enemy count before spawning
+        this.structureEnemyCount = 0;
+
+        // Spawn each enemy type defined in the structure
+        structureDef.enemies.forEach(enemyDef => {
+            // Spawn 'amount' copies of this enemy type
+            for (let i = 0; i < enemyDef.amount; i++) {
+                const type = enemiesObj.types[enemyDef.type];
+
+                // Pick random position inside structure bounding box
+                // Keep trying random spots until we find one that doesn't overlap blocks
+                let validPosition = false;
+                let x, y;
+                let attempts = 0;
+                const maxAttempts = 20; // prevent infinite loops
+
+                while (!validPosition && attempts < maxAttempts) {
+                    x = minX + Math.random() * (maxX - minX - type.width);
+                    y = minY + Math.random() * (maxY - minY - type.height);
+
+                    // Check if this position overlaps any block
+                    const testBox = { x: x, y: y, width: type.width, height: type.height };
+                    const overlapsBlock = structureDef.blocks.some(block => isColliding(testBox, block));
+
+                    if (!overlapsBlock) {
+                        validPosition = true;
+                    }
+                    attempts++;
+                }
+
+                // If we found a valid position, clamp to world bounds and spawn
+                if (validPosition) {
+                    x = Math.max(0, Math.min(x, gameArea.width - type.width));
+                    y = Math.max(0, Math.min(y, gameArea.height - type.height));
+
+                    // Create enemy object with initial random velocity
+                    const randomSpeed = type.speed * (0.5 + Math.random() * 0.5); // 50%-100% of normal speed
+                    const randomAngle = Math.random() * Math.PI * 2;
+
+                    const enemy = {
+                        x, y,
+                        width: type.width, height: type.height,
+                        speed: type.speed,
+                        speedX: Math.cos(randomAngle) * randomSpeed,
+                        speedY: Math.sin(randomAngle) * randomSpeed,
+                        maxHP: type.maxHP,
+                        hp: type.maxHP,
+                        damage: type.damage,
+                        color: type.color, cost: type.cost,
+                        special: type.special,
+                        track_player: type.track_player,
+                    };
+                    enemiesObj.components.push(enemy);
+                    this.structureEnemyCount++;
+                }
+            }
+        });
+    }
+
+    // ------ Update Structure ------
+    update() {
+        if (!this.isActive) return;
+
+        // Count non-boss structure enemies still alive (preserve snails)
+        const aliveStructureEnemies = enemiesObj.components.filter(e => !e.is_boss).length;
+
+        // Check if structure should clear (all enemies dead OR snail takes 75 damage)
+        if (aliveStructureEnemies === 0 || waveSnailDamage >= maxSnailDamage) {
+            // ==== STRUCTURE CLEARED ====
+            // Clear structure and resume normal waves
+            this.isActive = false;
+            this.currentBlocks = [];
+
+            // Remove all non-boss enemies but keep snails
+            enemiesObj.components = enemiesObj.components.filter(e => e.is_boss);
+            waveManager.spawnQueue = [];
+            waveManager.startNextWave();
+        }
     }
 
     // ------ Draw Structure ------
     draw() {
-        if (!this.isActive) return; // do nothing if class is not active
+        if (!this.isActive) return;
+
         const ctx = gameArea.context;
-        this.currentBlocks.forEach(b => {
+        this.currentBlocks.forEach(block => {
             ctx.fillStyle = "gray";
-            ctx.fillRect(b.x, b.y, b.width, b.height);
+            ctx.fillRect(block.x, block.y, block.width, block.height);
         });
     }
 }
@@ -508,9 +675,9 @@ class Bullets {
             // Skip rest of update if bullet was removed
             if (hitObstacle) continue;
 
-            // Remove bullets outside canvas
-            if (b.x < -50 || b.x > gameArea.canvas.width + 50 ||
-                b.y < -50 || b.y > gameArea.canvas.height + 50) {
+            // Remove bullets outside world
+            if (b.x < -50 || b.x > gameArea.width + 50 ||
+                b.y < -50 || b.y > gameArea.height + 50) {
                 this.components.splice(i, 1);
             }
         }
@@ -569,13 +736,13 @@ function startGame() {
         enemiesObj = new Enemies();
         bulletsObj = new Bullets();
         waveManager = new WaveManager();
-        structureManager = new StructureManager(); // Clear any structure left from a previous run
+        structureManager = new StructureManager();
         waveSnailDamage = 0;
         gameDuration = 0;
 
         playerObj = new Player(
-            gameArea.canvas.width / 2,
-            gameArea.canvas.height / 2
+            gameArea.width / 2,
+            gameArea.height / 2
         );
     } else {
         isPaused = false;
@@ -627,21 +794,65 @@ function handleGameOver() {
 /* ============================
           GAME AREA ENGINE
    ============================ */
+const WORLD_WIDTH = 1920;   // Fixed game world width
+const WORLD_HEIGHT = 1080;  // Fixed game world height
+
 const gameArea = {
     canvas: document.getElementById("gameCanvas"),
+    // ------ World sizing ------
+    width: WORLD_WIDTH,      // Game logic uses these
+    height: WORLD_HEIGHT,
+    // ------ Screen sizing ------
+    scale: 1,                // World units -> screen pixels (scales up on 4K, 1:1 on 1080p)
+    offsetX: 0,              // Letterbox offset in screen pixels
+    offsetY: 0,
+
     setup: function() {
-        this.canvas.width = window.innerWidth;
-        this.canvas.height = window.innerHeight;
-
         this.context = this.canvas.getContext("2d");
-
+        this.resize();
         lastTimestamp = performance.now();
         requestAnimationFrame(engineLoop);
     },
+
+    // ------ Fit canvas to window and recalculate scale ------
+    resize: function() {
+        const dpr = window.devicePixelRatio || 1;
+        const cssW = window.innerWidth;
+        const cssH = window.innerHeight;
+
+        // Set canvas CSS size to match window
+        this.canvas.style.width = cssW + "px";
+        this.canvas.style.height = cssH + "px";
+
+        // Set canvas buffer size for sharp rendering on high-DPI screens
+        this.canvas.width = Math.round(cssW * dpr);
+        this.canvas.height = Math.round(cssH * dpr);
+
+        // Calculate largest scale that fits the whole world (letterbox on non-16:9)
+        this.scale = Math.min(this.canvas.width / this.width, this.canvas.height / this.height);
+
+        // Center the scaled world, split leftover space equally on both sides (creates black bars)
+        this.offsetX = (this.canvas.width - this.width * this.scale) / 2;
+        this.offsetY = (this.canvas.height - this.height * this.scale) / 2;
+    },
+
+    // ------ Clear full canvas in screen space ------
     clear: function() {
         if (this.context) {
+            this.context.setTransform(1, 0, 0, 1, 0, 0);
             this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
         }
+    },
+
+    // ------ Switch drawing to world coordinates and clip to playfield ------
+    beginWorld: function() {
+        const ctx = this.context;
+        // Apply scale and offset so world coords become screen coords
+        ctx.setTransform(this.scale, 0, 0, this.scale, this.offsetX, this.offsetY);
+        // Clip to arena so nothing draws outside it
+        ctx.beginPath();
+        ctx.rect(0, 0, this.width, this.height);
+        ctx.clip();
     }
 };
 
@@ -770,6 +981,7 @@ function update() {
     bulletsObj.update();
 
     waveManager.update();
+    structureManager.update(); // Check if structure should clear
 
     calculateShots();
     checkCollisions();
@@ -787,21 +999,38 @@ function update() {
           RENDER VISUALS
    ============================ */
 function renderGame() {
-    gameArea.clear();
+    // Clear canvas to black (letterbox bars)
+    if (gameArea.context) {
+        gameArea.context.setTransform(1, 0, 0, 1, 0, 0);
+        gameArea.context.fillStyle = "black";
+        gameArea.context.fillRect(0, 0, gameArea.canvas.width, gameArea.canvas.height);
+    }
 
     if (gameStarted && playerObj && gameArea.context) {
-        // ------ Draw Objects ------
+        // ------ Draw Objects in World Space ------
+        const ctx = gameArea.context;
+        ctx.save();
+        gameArea.beginWorld();
+
+        // Draw arena background
+        ctx.fillStyle = "#f5f5f5";
+        ctx.fillRect(0, 0, gameArea.width, gameArea.height);
+
         playerObj.draw();
         enemiesObj.draw();
         bulletsObj.draw();
         structureManager.draw();
 
-        // ------ Wave Counter ------
-        const ctx = gameArea.context;
+        ctx.restore();
+
+        // ------ Wave Counter in Screen Space ------
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0); // back to screen space
         ctx.fillStyle = "black";
         ctx.font = "bold 24px Arial";
         ctx.textAlign = "left";
         ctx.fillText("Wave: " + waveManager.currentWave, 20, 45);
+        ctx.restore();
     }
 }
 
@@ -843,6 +1072,5 @@ document.addEventListener("keyup", e => {
 });
 
 window.addEventListener("resize", () => {
-    gameArea.canvas.width = window.innerWidth;
-    gameArea.canvas.height = window.innerHeight;
+    gameArea.resize();
 });
