@@ -459,8 +459,8 @@ class WaveManager {
         if (this.spawnQueue.length === 0 || !this.waveSides) return;
 
         const ctx = gameArea.context;
-        const thickness = 40;
-        const alpha = getWarningPulseAlpha(0.30);
+        const thickness = 30;
+        const alpha = getWarningPulseAlpha(0);
         // Two color stops: opaque red at the wall, fully transparent red at the inner edge
         const redAtBorder = `rgba(255, 0, 0, ${alpha})`;
         const transparentRed = "rgba(255, 0, 0, 0)";
@@ -612,32 +612,27 @@ class StructureManager {
                         candidates.push({ x: originalX + radius, y: originalY + offset });
                     }
                 }
-
                 // Test each candidate: it must be inside the world and touch no block
                 for (const candidate of candidates) {
                     if (candidate.x < 0 || candidate.y < 0 ||
                         candidate.x > maxX || candidate.y > maxY) {
                         continue;
                     }
-
                     const candidateBox = {
                         x: candidate.x,
                         y: candidate.y,
                         width: entity.width,
                         height: entity.height
                     };
-
                     const blocked = this.currentBlocks.some(
                         block => isColliding(candidateBox, block)
                     );
-
                     if (!blocked) {
                         freePosition = candidate;
                         break;
                     }
                 }
             }
-
             // Move the entity to the free position if one was found
             if (freePosition) {
                 entity.x = freePosition.x;
