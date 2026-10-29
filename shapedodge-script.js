@@ -197,8 +197,8 @@ class Enemies {
             fast:  { width:50,  height:50,  speed:8,   maxHP:10,   hp:10,   damage:15, color:"yellow", cost:10,  is_boss:false, special:null,     track_player:false },
             tank:  { width:150, height:150, speed:3,   maxHP:100,  hp:100,  damage:60, color:"purple", cost:50,  is_boss:false, special:null,     track_player:false },
             tiny:  { width:25,  height:25,  speed:4,   maxHP:5,    hp:5,    damage:10, color:"lime",   cost:5,   is_boss:false, special:null,     track_player:false },
-            snail: { width:15,  height:15,  speed:1.5, maxHP:1000, hp:1000, damage:1,  color:"black",  cost:250, is_boss:true,  special:"one_hp", track_player:true  },
-            temu_snail: { width:15,  height:15,  speed:1.5, maxHP:200, hp:200, damage:1,  color:"black",  cost:150, is_boss:false,  special:"one_hp", track_player:true }
+            snail: { width:15,  height:15,  speed:1.5, maxHP:1000, hp:1000, damage:1,  color:"black",  cost:500, is_boss:true,  special:"one_hp", track_player:true  },
+            temu_snail: { width:15,  height:15,  speed:1.5, maxHP:200, hp:200, damage:1,  color:"black",  cost:200, is_boss:false,  special:"one_hp", track_player:true }
         };
         this.components = []; // every enemy currently alive
     }
