@@ -1,4 +1,3 @@
-
 // ========= STRUCTURES =========
 const structures = [
     {
@@ -329,7 +328,7 @@ class WaveManager {
         this.duration++;
 
         if (this.spawnQueue.length === 0) {
-            if (activeEnemies === 0 || waveSnailDamage >= maxSnailDamage) {
+            if (activeEnemies === 0 || waveBossDmg >= maxSnailDamage) {
                 this.startNextWave();
             } else if (activeEnemies <= 2 && Math.floor(Math.random() * 100) === 1) {
                 this.startNextWave();
@@ -350,7 +349,7 @@ class WaveManager {
 
     startNextWave() {
         this.currentWave++;
-        waveSnailDamage = 0;
+        waveBossDmg = 0;
 
         let budget = this.baseBudget + this.currentWave * 20;
         this.duration = 0;
@@ -672,7 +671,7 @@ class StructureManager {
 
         const aliveStructureEnemies = enemiesObj.components.filter(e => !e.is_boss).length;
 
-        if (aliveStructureEnemies === 0 || waveSnailDamage >= maxSnailDamage) {
+        if (aliveStructureEnemies === 0 || waveBossDmg >= maxSnailDamage) {
             this.isActive = false;
             this.currentBlocks = [];
 
@@ -803,7 +802,7 @@ let gameDuration = 0;
 let gameStarted = false;
 let isPaused = true;
 let gameOver = false;
-let waveSnailDamage = 0;
+let waveBossDmg = 0;
 const maxSnailDamage = 75;
 
 // Calculate the warning opacity from the current tick count.
@@ -833,7 +832,7 @@ function startGame() {
         bulletsObj = new Bullets();
         waveManager = new WaveManager();
         structureManager = new StructureManager();
-        waveSnailDamage = 0;
+        waveBossDmg = 0;
         gameDuration = 0;
 
         playerObj = new Player(
@@ -1043,8 +1042,8 @@ function checkCollisions() {
                 enemy.hp -= bullet.damage;
                 bulletsObj.components.splice(j, 1);
 
-                if (enemy.special === "one_hp") {
-                    waveSnailDamage += bullet.damage;
+                if (enemy.is_boss) {
+                    waveBossDmg += bullet.damage;
                 }
 
                 if (enemy.hp <= 0) {
