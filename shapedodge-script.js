@@ -1085,6 +1085,12 @@ function movePlayer() {
     if (keys.s && !keys.w) playerObj.speedY = playerObj.speed;
     if (keys.a && !keys.d) playerObj.speedX = -playerObj.speed;
     if (keys.d && !keys.a) playerObj.speedX = playerObj.speed;
+
+    // Normalize diagonal movement speed so diagonal speed matches cardinal speed
+    if (playerObj.speedX !== 0 && playerObj.speedY !== 0) {
+        playerObj.speedX *= Math.SQRT1_2;
+        playerObj.speedY *= Math.SQRT1_2;
+    }
 }
 
 // ========= SHOOTING KEYBINDS =========
