@@ -52,7 +52,7 @@ const structures = [
             { width: 320, height: 60, x: 820, y: 760 },
             { width: 60, height: 60, x: 590, y: 530 },
             { width: 60, height: 60, x: 1310, y: 530 },
-            { width: 60, height: 60, x: 1310, y: 990 },
+            { width: 60, height: 90, x: 1310, y: 990 },
             { width: 60, height: 60, x: 590, y: 990 },
             { width: 60, height: 90, x: 950, y: 500 },
             { width: 60, height: 90, x: 950, y: 990 },
@@ -251,7 +251,8 @@ class Enemies {
             cost: type.cost,
             special: type.special,
             is_boss: type.is_boss,
-            track_player: type.track_player
+            track_player: type.track_player,
+            is_structure_enemy: false
         });
     }
 
@@ -360,8 +361,8 @@ class WaveManager {
 
     // ========= UPDATE WAVES =========
     update() {
-        // Don't advance normal waves while a structure is active or counting down.
-        if (structureManager.isActive || structureManager.spawnCountdown > 0) return;
+        // Don't advance normal waves while a structure is counting down.
+        if (structureManager.spawnCountdown > 0) return;
 
         // Bosses are ignored here so a living snail never blocks the next wave
         const activeEnemies = enemiesObj.components.filter(e => !e.is_boss).length;
@@ -405,8 +406,8 @@ class WaveManager {
 
         if (structureTrigger) {
             // ------ STRUCTURE WAVE ------
-            // Structure waves remove normal enemies but preserve every existing boss.
-            enemiesObj.components = enemiesObj.components.filter(e => e.is_boss);
+            // Structure waves remove normal enemies but preserve every existing boss and structure enemies.
+            enemiesObj.components = enemiesObj.components.filter(e => e.is_boss || e.is_structure_enemy);
             this.spawnQueue = [];
             this.waveSides = null; // hides the wall warning
 
@@ -715,7 +716,8 @@ class StructureManager {
                         cost: type.cost,
                         special: type.special,
                         is_boss: type.is_boss,
-                        track_player: type.track_player
+                        track_player: type.track_player,
+                        is_structure_enemy: true
                     });
 
                     this.structureEnemyCount++;
@@ -727,10 +729,8 @@ class StructureManager {
     // ========= UPDATE STRUCTURE =========
     update() {
         // ------ COUNTDOWN PHASE ------
-        // Countdown phase: show the complete 125-tick warning before spawning.
         if (this.spawnCountdown > 0 && this.pendingStructureDef) {
             if (this.countdownJustStarted) {
-                // Do not decrement on the tick the countdown was created.
                 this.countdownJustStarted = false;
             } else {
                 this.spawnCountdown--;
@@ -740,9 +740,6 @@ class StructureManager {
                 const structureDef = this.pendingStructureDef;
                 const footprint = this.getFootprint(structureDef);
 
-                // The entire footprint is dangerous, including gaps between its blocks.
-                // Kill the player before generating the structure if their rectangles overlap.
-                // (This check runs before spawnStructure(), so the player isn't pushed out first.)
                 if (playerObj && isColliding(playerObj, footprint)) {
                     playerObj.hp = 0;
                 }
@@ -756,18 +753,13 @@ class StructureManager {
         // ------ ACTIVE STRUCTURE PHASE ------
         if (!this.isActive) return;
 
-        // Bosses don't count, so the structure can clear while a snail is still alive
-        const aliveStructureEnemies = enemiesObj.components.filter(e => !e.is_boss).length;
+        // Structure clears when all its specific enemies are dead
+        const aliveStructureEnemies = enemiesObj.components.filter(e => e.is_structure_enemy && !e.is_boss).length;
 
-        // Structure clears when all its enemies are dead or the boss took enough damage
-        if (aliveStructureEnemies === 0 || waveBossDmg >= maxSnailDamage) {
+        // Max boss damage no longer forces the structure to collapse
+        if (aliveStructureEnemies === 0) {
             this.isActive = false;
             this.currentBlocks = [];
-
-            // Preserve snails, clear regular enemies, and begin the next wave.
-            enemiesObj.components = enemiesObj.components.filter(e => e.is_boss);
-            waveManager.spawnQueue = [];
-            waveManager.startNextWave();
         }
     }
 
